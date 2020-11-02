@@ -1,0 +1,47 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- General build settings -->
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+    <PropertyGroup>
+        <LangVersion>8.0</LangVersion>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <WarningsAsErrors>CS8600;CS8602;CS8603</WarningsAsErrors>
+        <WarningsNotAsErrors></WarningsNotAsErrors>
+      <!-- 
+          [CA1062: Validate arguments of public methods]
+          Reason:
+            c# 8 nullable references are enabled, thus this check is not needed, see: https://github.com/dotnet/roslyn-analyzers/issues/2875
+          [CA1303: Retrieve string from resources instead]
+          Reason: we know when we need to pull a string from resources and when not.
+          [CA1812: Avoid uninstantiated internal classes]
+          Reason: 
+            1. Most types will be registered dynamically in the IoC container, e.g. IRequestHandler.
+            2. We aim for high test-coverage and we won't find any unused code with CA1812 then.
+          [CS1591: Missing XML comment for public ...]
+          Reason:
+            We don't want to document everything. We only document where it adds value.
+          [SA1005: Single line comment should begin with a space.]
+          Reason:
+            Annoying when commenting code.
+          [SA1200: Using directive should appear within a namespace declaration]
+          Reason:
+            The tooling doesn't help with it and it's annoying.
+          [SA1413: Trailing comma in multiline initializers]
+          Reason:
+            Auto generated EF migratino code.
+          [SA1512: Singe line comments should not be followed by blank line]
+          Reason: annoying
+          [SA1515: Singe line comments should be preceded by blank line]
+          Reason: annoying
+          [SA1600/SA1601: (Partial) Elements should be documented]
+          Reason: 
+            We don't want to document everything. We only document where it adds value.
+          [SA1633: The file header is missing or not located at the top of the file]
+          Reason:
+            Who cares
+        -->
+        <NoWarn>$(NoWarn);CS1591;CA1062;CA1303;CA1812;SA1005;SA1200;SA1413;SA1512;SA1515;SA1600;SA1601;SA1633</NoWarn>
+    </PropertyGroup>
+</Project>

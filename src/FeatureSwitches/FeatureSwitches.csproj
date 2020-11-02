@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <Description>Simple feature management for .NET</Description>
+    <Authors>jr01</Authors>
+    <PackageId>FeatureSwitches</PackageId>
+    <PackageProjectUrl>https://github.com/jr01/FeatureSwitches</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>FeatureManagement FeatureFlags FeatureToggles FeatureSwitches</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" Version="4.7.2" />
+  </ItemGroup>
+
+</Project>
