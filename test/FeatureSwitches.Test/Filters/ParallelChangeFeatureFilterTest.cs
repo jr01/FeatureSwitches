@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FeatureSwitches.Filters;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FeatureSwitches.Test.Filters
 {

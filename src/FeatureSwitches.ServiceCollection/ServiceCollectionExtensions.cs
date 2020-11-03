@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using FeatureSwitches.Definitions;
+﻿using FeatureSwitches.Definitions;
 using FeatureSwitches.EvaluationCaching;
 using FeatureSwitches.Filters;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace FeatureSwitches
 {

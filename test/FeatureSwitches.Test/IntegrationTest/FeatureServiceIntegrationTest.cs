@@ -4,11 +4,11 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FeatureSwitches.Definitions;
 using FeatureSwitches.EvaluationCaching;
 using FeatureSwitches.Filters;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FeatureSwitches.Test.IntegrationTest
 {

@@ -1,7 +1,7 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FeatureSwitches.Definitions;
 using FeatureSwitches.EvaluationCaching;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FeatureSwitches.Test.Session
 {

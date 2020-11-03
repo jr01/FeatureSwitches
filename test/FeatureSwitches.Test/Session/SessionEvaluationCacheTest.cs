@@ -1,5 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using FeatureSwitches.EvaluationCaching;
+﻿using FeatureSwitches.EvaluationCaching;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FeatureSwitches.Test.Session
 {
