@@ -23,8 +23,13 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
-    - name: Publish NuGet
+    - name: Publish FeatureSwitches NuGet
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         PROJECT_FILE_PATH: src/FeatureSwitches/FeatureSwitches.csproj
+        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+    - name: Publish FeatureSwitches.ServiceCollection NuGet
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: src/FeatureSwitches.ServiceCollection/FeatureSwitches.ServiceCollection.csproj
         NUGET_KEY: ${{secrets.NUGET_API_KEY}}
