@@ -1,0 +1,12 @@
+<Project>
+  <Import Project="..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <Authors>jr01</Authors>
+    <PackageProjectUrl>https://github.com/jr01/FeatureSwitches</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>FeatureManagement FeatureFlags FeatureToggles FeatureSwitches</PackageTags>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+</Project>

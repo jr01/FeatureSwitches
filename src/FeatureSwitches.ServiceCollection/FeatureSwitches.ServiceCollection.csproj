@@ -6,11 +6,7 @@
   
   <PropertyGroup>
     <Description>ServiceCollection extensions for FeatureSwitches</Description>
-    <Authors>jr01</Authors>
     <PackageId>FeatureSwitches.ServiceCollection</PackageId>
-    <PackageProjectUrl>https://github.com/jr01/FeatureSwitches</PackageProjectUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>FeatureManagement FeatureFlags FeatureToggles FeatureSwitches</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
