@@ -11,6 +11,7 @@
     <PackageProjectUrl>https://github.com/jr01/FeatureSwitches</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>FeatureManagement FeatureFlags FeatureToggles FeatureSwitches</PackageTags>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
