@@ -1,13 +1,15 @@
-﻿namespace FeatureSwitches.Filters
+﻿using System.Threading.Tasks;
+
+namespace FeatureSwitches.Filters
 {
     public class OnOffFeatureFilter : IFeatureFilter
     {
         public string Name => "OnOff";
 
-        public bool IsEnabled(FeatureFilterEvaluationContext context)
+        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
         {
             var settings = context.GetSettings<ScalarValueSetting<bool>>();
-            return settings.Setting;
+            return Task.FromResult(settings.Setting);
         }
     }
 }

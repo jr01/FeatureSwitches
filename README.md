@@ -4,12 +4,12 @@ Switch application features on, off, or to any defined value.
 
 * Conditional feature switch support (boolean)
 ```C#
-     bool isEnabled = featureService.IsEnabled("feature");
+     bool isEnabled = await featureService.IsEnabled("feature");
 ```
 * Any type can be switched to any value; for example to do A/B testing.
 ```C#
-    bool isEnabled = featureService.GetValue<bool>("feature");
-    var myTypedValue = featureService.GetValue<MyType>("feature");
+    bool isEnabled = await featureService.GetValue<bool>("feature");
+    var myTypedValue = await featureService.GetValue<MyType>("feature");
     if (myTypedValue.Setting == 'A')
         ...
 ```
@@ -27,10 +27,6 @@ Switch application features on, off, or to any defined value.
   * In memory evaluation cache
     * Singleton by default.
     * Values are always cached using the evaluation context.
-  * Synchronous calls
-    * Discourages developers to implement feature filters that need to fetch external data.
-      Rule evaluation speed should be constant and predictable.
-    * Hint: use a context accessor instead.
 * Pluggable feature definition providers
   * `InMemoryFeatureProvider` can be used in automated tests, or as an intermediate.
 * Support for stable feature evaluation during a user's session
@@ -70,13 +66,13 @@ public class MyClass
 
     public void Execute()
     {
-        if (this.featureService.IsEnabled("MyBoolFeature"))
+        if (await this.featureService.IsEnabled("MyBoolFeature"))
         {
             ...
         }
 
         // or
-        if (this.featureService.GetValue<bool>("MyBoolFeature"))
+        if (await this.featureService.GetValue<bool>("MyBoolFeature"))
         {
             ...
         }
@@ -104,7 +100,7 @@ _Note: if the feature hasn't been defined the false is returned._
 
 * Usage
     ```C#
-    if (this.featureService.GetValue<Direction>("DirectionFeature") == DirectionFeature.Left)
+    if (await this.featureService.GetValue<Direction>("DirectionFeature") == DirectionFeature.Left)
     {
         ...
     }
@@ -176,7 +172,7 @@ A feature is on when all applied feature filters decide that the feature should 
             this.appContext = appContext;
         }
 
-        public bool IsEnabled(FeatureFilterEvaluationContext context)
+        public async Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
         {
             var settings = context.GetSettings<MyUserFeatureFilterSettings>();
             return settings.AllowedNames.Contains(this.appContext.Name) ?? false;
@@ -195,7 +191,7 @@ A feature is on when all applied feature filters decide that the feature should 
     {
         scope.ServiceProvider.GetRequired<MyAppContext>().Name = "John";
         var featureService = scope.ServiceProvider.GetRequired<FeatureService>();
-        Assert.IsTrue(featureService.IsEnabled("MyBoolFeature"));
+        Assert.IsTrue(await featureService.IsEnabled("MyBoolFeature"));
     }
     ```
 
@@ -225,22 +221,22 @@ A feature is on when all applied feature filters decide that the feature should 
     using (var scope = serviceProvider.CreateScope())
     {
         scope.ServiceProvider.GetRequired<MyAppContext>().Name = "John";
-        Assert.AreEqual(AB.A, featureService.GetValue<AB>("Feature"));
+        Assert.AreEqual(AB.A, await featureService.GetValue<AB>("Feature"));
     }
     using (var scope = serviceProvider.CreateScope())
     {
         scope.ServiceProvider.GetRequired<MyAppContext>().Name = "Jane";
 
         SystemClock.Now = new DateTimeOffSet(new DateTime(2020, 11, 2));
-        Assert.AreEqual(AB.Off, featureService.GetValue<AB>("Feature"));
+        Assert.AreEqual(AB.Off, await featureService.GetValue<AB>("Feature"));
 
         SystemClock.Now = new DateTimeOffSet(new DateTime(2020, 11, 3));
-        Assert.AreEqual(AB.B, featureService.GetValue<AB>("Feature"));
+        Assert.AreEqual(AB.B, await featureService.GetValue<AB>("Feature"));
     }
     using (var scope = serviceProvider.CreateScope())
     {
         scope.ServiceProvider.GetRequired<MyAppContext>().Name = "James";
-        Assert.AreEqual(AB.Off, featureService.GetValue<AB>("Feature"));
+        Assert.AreEqual(AB.Off, await featureService.GetValue<AB>("Feature"));
     }
 
     ```
@@ -259,7 +255,7 @@ public class MyUserFeatureFilter : ContextualFeatureFilter<MyAppContext>
 {
     public string Name => "User";
 
-    public bool IsEnabled(FeatureFilterEvaluationContext context, MyAppContext appContext)
+    public async Task<bool> IsEnabled(FeatureFilterEvaluationContext context, MyAppContext appContext)
     {
         var settings = context.Parameters.Get<MyUserFeatureFilterSettings>();
         return settings?.AllowedNames.Contains(appContext.Name) ?? false;
@@ -271,7 +267,7 @@ featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
 featureDefinitionProvider.SetFeatureFilter("MyBoolFeature", "User", "{ \"allowedNames\": [\"John\", \"Jane\"] }");
 
 var featureService = serviceProvider.GetRequired<FeatureService>();
-Assert.IsTrue(featureService.IsEnabled("MyBoolFeature", new MyAppContext { Name = "John" }));
+Assert.IsTrue(await featureService.IsEnabled("MyBoolFeature", new MyAppContext { Name = "John" }));
 ```
 
 
@@ -288,17 +284,17 @@ Out of the box the library ships with a ParallelChange contextual feature filter
 
 * When writing data
     ```C#
-    if (!featureService.IsEnabled("feature", ParallelChange.Contracted)) {
+    if (!await featureService.IsEnabled("feature", ParallelChange.Contracted)) {
         Perform_Old_DataWrite();
     }
-    if (featureService.IsEnabled("feature", ParallelChange.Expanded)) {
+    if (await featureService.IsEnabled("feature", ParallelChange.Expanded)) {
         Perform_New_DataWrite();
     }
     ```
 
 * When checking from UI if the feature can be used
     ```C#
-    if (featureService.IsEnabled("feature", ParallelChange.Migrated)) {
+    if (await featureService.IsEnabled("feature", ParallelChange.Migrated)) {
         Perform_New_UI();
     } else {
         Perform_Old_UI();
@@ -307,7 +303,7 @@ Out of the box the library ships with a ParallelChange contextual feature filter
 
 * Alternatively the UI can do
     ```C#
-    if (featureService.IsEnabled("feature")) {
+    if (await featureService.IsEnabled("feature")) {
         Perform_New_UI();
     } else {
         Perform_Old_UI();
@@ -333,11 +329,11 @@ There are different solutions to this:
     // When logging in fill the session
     sessionEvaluationCache.ResetState();
     var featureState = new Dictionary<string, string>();
-    foreach (var feature in featureService.GetFeatures())
+    foreach (var feature in await featureService.GetFeatures())
     {
         if (IsSessionFeature(feature))
         {
-            _ = featureService.GetValue<string>();
+            _ = await featureService.GetValue<string>();
         }
     }
 
@@ -365,9 +361,9 @@ There are different solutions to this:
 
     var sessionContext = serviceProvider.GetRequired<SessionContext>);
     sessionContext.LoginTime = DateTimeOffSet.Parse("2020-11-03");
-    Assert.IsFalse(featureService.IsEnabled("SessionFeature"));
+    Assert.IsFalse(await featureService.IsEnabled("SessionFeature"));
     sessionContext.LoginTime = DateTimeOffSet.Parse("2020-11-04");
-    Assert.IsTrue(featureService.IsEnabled("SessionFeature"));
+    Assert.IsTrue(await featureService.IsEnabled("SessionFeature"));
 
     // Or roll-your-own
     public class MyAppContext
@@ -391,7 +387,7 @@ There are different solutions to this:
             this.appContext = appContext;
         }
 
-        public bool IsEnabled(FeatureFilterEvaluationContext context)
+        public async Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
         {
             var settings = context.GetSettings<MySessionFeatureFilterSettings>();
             return this.appContext.LoginTime >= settings.From;
@@ -402,9 +398,7 @@ There are different solutions to this:
     featureDefinitionProvider.SetFeatureFilter("SessionFeature", "MySession", config: "{ \"From\": \"2020-11-04\" }");
 
     appContext.LoginTime = DateTimeOffSet.Parse("2020-11-03");
-    Assert.IsFalse(featureService.IsEnabled("SessionFeature"));
+    Assert.IsFalse(await featureService.IsEnabled("SessionFeature"));
     appContext.LoginTime = DateTimeOffSet.Parse("2020-11-04");
-    Assert.IsTrue(featureService.IsEnabled("SessionFeature"));
+    Assert.IsTrue(await featureService.IsEnabled("SessionFeature"));
     ```
-
-

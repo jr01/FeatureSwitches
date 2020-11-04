@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using FeatureSwitches.Definitions;
 using FeatureSwitches.EvaluationCaching;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -9,69 +10,80 @@ namespace FeatureSwitches.Test.Session
     public class FeatureEvaluationCacheTest
     {
         [TestMethod]
-        public void FeatureEvaluationCache_caches_using_evaluationcontext()
+        public async Task FeatureEvaluationCache_caches_using_evaluationcontext()
         {
             var provider = new TestProvider();
             using var cache = new FeatureEvaluationCache(provider);
 
-            cache.AddOrUpdate("A", "C-1", true);
-            cache.AddOrUpdate("A", "C-2", false);
-            cache.AddOrUpdate("B", "C-1", false);
+            await cache.SetItem("A", "C-1", true);
+            await cache.SetItem("A", "C-2", false);
+            await cache.SetItem("B", "C-1", false);
 
-            Assert.IsTrue(cache.TryGetValue<bool>("A", "C-1", out var value));
-            Assert.IsTrue(value);
-            Assert.IsTrue(cache.TryGetValue<bool>("A", "C-2", out value));
-            Assert.IsFalse(value);
-            Assert.IsTrue(cache.TryGetValue<bool>("B", "C-1", out value));
-            Assert.IsFalse(value);
-            Assert.IsFalse(cache.TryGetValue<bool>("A", "C-3", out _));
+            var item = await cache.GetItem<bool>("A", "C-1");
+            Assert.IsNotNull(item);
+            Assert.IsTrue(item!.Result);
+            item = await cache.GetItem<bool>("A", "C-2");
+            Assert.IsNotNull(item);
+            Assert.IsFalse(item!.Result);
+            item = await cache.GetItem<bool>("B", "C-1");
+            Assert.IsNotNull(item);
+            Assert.IsFalse(item!.Result);
+            item = await cache.GetItem<bool>("A", "C-3");
+            Assert.IsNull(item);
         }
 
         [TestMethod]
-        public void FeatureEvaluationCache_resets_when_feature_changes()
+        public async Task FeatureEvaluationCache_resets_when_feature_changes()
         {
             var provider = new TestProvider();
             using var cache = new FeatureEvaluationCache(provider);
 
-            cache.AddOrUpdate("A", "C-1", true);
-            cache.AddOrUpdate("A", "C-2", false);
-            cache.AddOrUpdate("B", "C-1", false);
+            await cache.SetItem("A", "C-1", true);
+            await cache.SetItem("A", "C-2", false);
+            await cache.SetItem("B", "C-1", false);
 
             provider.InvokeChange("A");
 
-            Assert.IsFalse(cache.TryGetValue<bool>("A", "C-1", out _));
-            Assert.IsFalse(cache.TryGetValue<bool>("A", "C-2", out _));
-            Assert.IsTrue(cache.TryGetValue<bool>("B", "C-1", out var value));
-            Assert.IsFalse(value);
-            Assert.IsFalse(cache.TryGetValue<bool>("A", "C-3", out _));
+            var item = await cache.GetItem<bool>("A", "C-1");
+            Assert.IsNull(item);
+            item = await cache.GetItem<bool>("A", "C-2");
+            Assert.IsNull(item);
+            item = await cache.GetItem<bool>("B", "C-1");
+            Assert.IsNotNull(item);
+            Assert.IsFalse(item!.Result);
+            item = await cache.GetItem<bool>("A", "C-3");
+            Assert.IsNull(item);
         }
 
         [TestMethod]
-        public void FeatureEvaluationCache_ignores_invalid_cast()
+        public async Task FeatureEvaluationCache_ignores_invalid_cast()
         {
             var provider = new TestProvider();
             using var cache = new FeatureEvaluationCache(provider);
 
-            cache.AddOrUpdate("A", "C-1", true);
+            await cache.SetItem("A", "C-1", true);
 
-            Assert.IsFalse(cache.TryGetValue<string>("A", "C-1", out _));
+            var item = await cache.GetItem<string>("A", "C-1");
+            Assert.IsNull(item);
         }
 
         [TestMethod]
-        public void FeatureEvaluationCache_AddOrUpdate_updates_value()
+        public async Task FeatureEvaluationCache_AddOrUpdate_updates_value()
         {
             var provider = new TestProvider();
             using var cache = new FeatureEvaluationCache(provider);
 
-            cache.AddOrUpdate("A", "C-1", true);
+            await cache.SetItem("A", "C-1", true);
 
-            Assert.IsTrue(cache.TryGetValue<bool>("A", "C-1", out var value));
-            Assert.IsTrue(value);
+            var item = await cache.GetItem<bool>("A", "C-1");
+            Assert.IsNotNull(item);
+            Assert.IsTrue(item!.Result);
 
-            cache.AddOrUpdate("A", "C-1", false);
+            await cache.SetItem("A", "C-1", false);
 
-            Assert.IsTrue(cache.TryGetValue<bool>("A", "C-1", out value));
-            Assert.IsFalse(value);
+            item = await cache.GetItem<bool>("A", "C-1");
+            Assert.IsNotNull(item);
+            Assert.IsFalse(item!.Result);
         }
 
         private class TestProvider : IFeatureDefinitionProvider
@@ -83,12 +95,12 @@ namespace FeatureSwitches.Test.Session
                 this.Changed?.Invoke(this, new FeatureDefinitionChangeEventArgs(feature));
             }
 
-            public FeatureDefinition GetFeatureDefinition(string feature)
+            public Task<FeatureDefinition?> GetFeatureDefinition(string feature)
             {
                 throw new NotImplementedException();
             }
 
-            public string[] GetFeatures()
+            public Task<string[]> GetFeatures()
             {
                 throw new NotImplementedException();
             }

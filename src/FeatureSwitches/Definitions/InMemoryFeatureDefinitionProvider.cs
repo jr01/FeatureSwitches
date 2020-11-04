@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using FeatureSwitches.Filters;
 
 namespace FeatureSwitches.Definitions
@@ -24,17 +25,20 @@ namespace FeatureSwitches.Definitions
 
         public event EventHandler<FeatureDefinitionChangeEventArgs>? Changed;
 
-        public string[] GetFeatures()
+        public Task<string[]> GetFeatures()
         {
-            return this.featureSwitches.Keys.ToArray();
+            var features = this.featureSwitches.Keys.ToArray();
+            return Task.FromResult(features);
         }
 
-        public FeatureDefinition? GetFeatureDefinition(string feature)
+        public Task<FeatureDefinition?> GetFeatureDefinition(string feature)
         {
-            return this.filterDefinitionCache.GetOrAdd(feature, x =>
+            var definition = this.filterDefinitionCache.GetOrAdd(feature, x =>
             {
                 return this.GetFeatureDefinitionInternal(feature);
             });
+
+            return Task.FromResult(definition);
         }
 
         /// <summary>

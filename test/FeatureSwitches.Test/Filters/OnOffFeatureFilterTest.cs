@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Threading.Tasks;
 using FeatureSwitches.Filters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -8,13 +9,13 @@ namespace FeatureSwitches.Test.Filters
     public class OnOffFeatureFilterTest
     {
         [TestMethod]
-        public void OnOffFilter_is_on_or_off()
+        public async Task OnOffFilter_is_on_or_off()
         {
             var filter = new OnOffFeatureFilter();
 
-            Assert.IsTrue(filter.IsEnabled(GetContext(true)));
+            Assert.IsTrue(await filter.IsEnabled(GetContext(true)).ConfigureAwait(false));
 
-            Assert.IsFalse(filter.IsEnabled(GetContext(false)));
+            Assert.IsFalse(await filter.IsEnabled(GetContext(false)).ConfigureAwait(false));
         }
 
         private static FeatureFilterEvaluationContext GetContext(bool value)

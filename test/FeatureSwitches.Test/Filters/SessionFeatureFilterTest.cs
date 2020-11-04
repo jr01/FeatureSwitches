@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Text.Json;
+using System.Threading.Tasks;
 using FeatureSwitches.Filters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,7 +11,7 @@ namespace FeatureSwitches.Test.Filters
     public class SessionFeatureFilterTest
     {
         [TestMethod]
-        public void SessionFilter_enables_at_or_after_login_time()
+        public async Task SessionFilter_enables_at_or_after_login_time()
         {
             var context = new SessionFeatureContext();
             var filter = new SessionFeatureFilter(context);
@@ -19,11 +20,11 @@ namespace FeatureSwitches.Test.Filters
             var evaluationContext = new FeatureFilterEvaluationContext("A", JsonSerializer.SerializeToUtf8Bytes(settings));
 
             context.LoginTime = DateTimeOffset.Parse("2020-11-03", CultureInfo.InvariantCulture);
-            Assert.IsFalse(filter.IsEnabled(evaluationContext));
+            Assert.IsFalse(await filter.IsEnabled(evaluationContext));
             context.LoginTime = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture);
-            Assert.IsTrue(filter.IsEnabled(evaluationContext));
+            Assert.IsTrue(await filter.IsEnabled(evaluationContext));
             context.LoginTime = DateTimeOffset.Parse("2020-11-05", CultureInfo.InvariantCulture);
-            Assert.IsTrue(filter.IsEnabled(evaluationContext));
+            Assert.IsTrue(await filter.IsEnabled(evaluationContext));
         }
     }
 }

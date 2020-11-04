@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace FeatureSwitches.EvaluationCaching
 {
@@ -18,33 +19,32 @@ namespace FeatureSwitches.EvaluationCaching
 
         private bool loaded;
 
-        public void AddOrUpdate<T>(string feature, string sessionContextValue, T value)
+        public Task SetItem<T>(string feature, string sessionContextValue, T value)
         {
             if (!this.loaded)
             {
                 this.state[feature] = JsonSerializer.SerializeToUtf8Bytes(value);
             }
+
+            return Task.CompletedTask;
         }
 
-        public bool TryGetValue<T>(string feature, string sessionContextValue, out T value)
+        public Task<EvaluationCacheResult<T>?> GetItem<T>(string feature, string sessionContextValue)
         {
             if (this.state.TryGetValue(feature, out var bytes))
             {
                 try
                 {
-                    value = JsonSerializer.Deserialize<T>(bytes);
-                    return true;
+                    var item = new EvaluationCacheResult<T> { };
+                    item.Result = JsonSerializer.Deserialize<T>(bytes);
+                    return Task.FromResult<EvaluationCacheResult<T>?>(item);
                 }
                 catch (JsonException)
                 {
                 }
-
-                value = default!;
-                return false;
             }
 
-            value = default!;
-            return false;
+            return Task.FromResult<EvaluationCacheResult<T>?>(null);
         }
 
         public void ResetState()

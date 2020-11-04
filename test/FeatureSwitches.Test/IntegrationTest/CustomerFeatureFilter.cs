@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using System.Threading;
+using System.Threading.Tasks;
 using FeatureSwitches.Filters;
 
 namespace FeatureSwitches.Test.IntegrationTest
@@ -15,17 +16,18 @@ namespace FeatureSwitches.Test.IntegrationTest
 
         public string Name => "Customer";
 
-        public bool IsEnabled(FeatureFilterEvaluationContext context)
+        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
         {
             var settings = context.GetSettings<CustomerFeatureFilterSettings>();
 
             var name = this.currentCustomer.Name ?? GetCurrentCustomer();
             if (name == null)
             {
-                return false;
+                return Task.FromResult(false);
             }
 
-            return settings?.Customers.Contains(name) ?? false;
+            var isEnabled = settings?.Customers.Contains(name) ?? false;
+            return Task.FromResult(isEnabled);
         }
 
         private static string? GetCurrentCustomer()

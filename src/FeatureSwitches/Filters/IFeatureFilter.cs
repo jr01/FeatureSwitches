@@ -1,7 +1,9 @@
-﻿namespace FeatureSwitches.Filters
+﻿using System.Threading.Tasks;
+
+namespace FeatureSwitches.Filters
 {
     public interface IFeatureFilter : IFeatureFilterMetadata
     {
-        bool IsEnabled(FeatureFilterEvaluationContext context);
+        Task<bool> IsEnabled(FeatureFilterEvaluationContext context);
     }
 }

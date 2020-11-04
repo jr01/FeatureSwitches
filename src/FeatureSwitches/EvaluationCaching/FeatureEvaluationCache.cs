@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using FeatureSwitches.Definitions;
 
 namespace FeatureSwitches.EvaluationCaching
@@ -17,9 +18,7 @@ namespace FeatureSwitches.EvaluationCaching
             this.featureDefinitionProvider.Changed += this.FeatureDatabase_Changed;
         }
 
-#pragma warning disable CA1021 // Avoid out parameters
-        public bool TryGetValue<T>(string feature, string sessionContextValue, out T value)
-#pragma warning restore CA1021 // Avoid out parameters
+        public Task<EvaluationCacheResult<T>?> GetItem<T>(string feature, string sessionContextValue)
         {
             if (this.cache.TryGetValue(feature, out var dict))
             {
@@ -27,22 +26,17 @@ namespace FeatureSwitches.EvaluationCaching
                 {
                     if (obj is T realObj)
                     {
-                        value = realObj;
-                        return true;
-                    }
-                    else
-                    {
-                        value = default!;
-                        return false;
+                        var item = new EvaluationCacheResult<T> { };
+                        item.Result = realObj;
+                        return Task.FromResult<EvaluationCacheResult<T>?>(item);
                     }
                 }
             }
 
-            value = default!;
-            return false;
+            return Task.FromResult<EvaluationCacheResult<T>?>(null);
         }
 
-        public void AddOrUpdate<T>(string feature, string sessionContextValue, T value)
+        public Task SetItem<T>(string feature, string sessionContextValue, T value)
         {
             var d = this.cache.GetOrAdd(feature, (x) =>
             {
@@ -50,6 +44,8 @@ namespace FeatureSwitches.EvaluationCaching
             });
 
             d[sessionContextValue] = value;
+
+            return Task.CompletedTask;
         }
 
         public void Dispose()

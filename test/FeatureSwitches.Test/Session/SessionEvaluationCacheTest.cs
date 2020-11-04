@@ -1,4 +1,5 @@
-﻿using FeatureSwitches.EvaluationCaching;
+﻿using System.Threading.Tasks;
+using FeatureSwitches.EvaluationCaching;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FeatureSwitches.Test.Session
@@ -7,47 +8,38 @@ namespace FeatureSwitches.Test.Session
     public class SessionEvaluationCacheTest
     {
         [TestMethod]
-        public void Save_and_load()
+        public async Task Save_and_load()
         {
             var sessionCache = new SessionEvaluationCache();
-            sessionCache.AddOrUpdate("featureA", string.Empty, true);
-            sessionCache.AddOrUpdate("featureB", string.Empty, false);
-            sessionCache.AddOrUpdate("featureC", string.Empty, ABTest.B);
+            await sessionCache.SetItem("featureA", string.Empty, true);
+            await sessionCache.SetItem("featureB", string.Empty, false);
+            await sessionCache.SetItem("featureC", string.Empty, ABTest.B);
 
             var state = sessionCache.GetState();
 
             sessionCache.LoadState(state);
 
-            if (!sessionCache.TryGetValue<bool>("featureA", string.Empty, out var boolValue))
-            {
-                Assert.Fail();
-            }
+            var item = await sessionCache.GetItem<bool>("featureA", string.Empty);
+            Assert.IsNotNull(item);
+            Assert.IsTrue(item!.Result);
 
-            Assert.IsTrue(boolValue);
+            item = await sessionCache.GetItem<bool>("featureB", string.Empty);
+            Assert.IsNotNull(item);
+            Assert.IsFalse(item!.Result);
 
-            if (!sessionCache.TryGetValue<bool>("featureB", string.Empty, out boolValue))
-            {
-                Assert.Fail();
-            }
-
-            Assert.IsFalse(boolValue);
-
-            if (!sessionCache.TryGetValue<ABTest>("featureC", string.Empty, out var enumValue))
-            {
-                Assert.Fail();
-            }
-
-            Assert.AreEqual(ABTest.B, enumValue);
+            var enumItem = await sessionCache.GetItem<ABTest>("featureC", string.Empty);
+            Assert.IsNotNull(enumItem);
+            Assert.AreEqual(ABTest.B, enumItem!.Result);
         }
 
         [TestMethod]
-        public void Sessioncache_speed()
+        public async Task Sessioncache_speed()
         {
             var sessionCache = new SessionEvaluationCache();
             const int MaxFeatures = 10000;
             for (int i = 0; i < MaxFeatures; i++)
             {
-                sessionCache.AddOrUpdate($"feature{i}", string.Empty, true);
+                await sessionCache.SetItem($"feature{i}", string.Empty, true);
             }
 
             var state = sessionCache.GetState();
@@ -56,12 +48,9 @@ namespace FeatureSwitches.Test.Session
 
             for (int i = 0; i < MaxFeatures; i++)
             {
-                if (!sessionCache.TryGetValue<bool>($"feature{i}", string.Empty, out var boolValue))
-                {
-                    Assert.Fail();
-                }
-
-                Assert.IsTrue(boolValue);
+                var item = await sessionCache.GetItem<bool>($"feature{i}", string.Empty);
+                Assert.IsNotNull(item);
+                Assert.IsTrue(item!.Result);
             }
         }
 

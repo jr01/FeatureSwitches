@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace FeatureSwitches.Filters
 {
@@ -6,10 +7,10 @@ namespace FeatureSwitches.Filters
     {
         public override string Name => "ParallelChange";
 
-        public override bool IsEnabled(FeatureFilterEvaluationContext context, ParallelChange evaluationContext)
+        public override Task<bool> IsEnabled(FeatureFilterEvaluationContext context, ParallelChange evaluationContext)
         {
             var scalar = context.GetSettings<ScalarValueSetting<ParallelChange>>();
-            return scalar.Setting switch
+            var isEnabled = scalar.Setting switch
             {
                 ParallelChange.Expanded =>
                     evaluationContext == ParallelChange.Expanded,
@@ -22,6 +23,8 @@ namespace FeatureSwitches.Filters
                     evaluationContext == ParallelChange.Contracted,
                 _ => throw new InvalidOperationException(),
             };
+
+            return Task.FromResult(isEnabled);
         }
     }
 }

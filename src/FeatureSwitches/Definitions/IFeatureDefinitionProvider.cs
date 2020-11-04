@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace FeatureSwitches.Definitions
 {
@@ -16,13 +17,13 @@ namespace FeatureSwitches.Definitions
         /// Gets a list of featureswitches.
         /// </summary>
         /// <returns>The names of all defined featureswitches.</returns>
-        string[] GetFeatures();
+        Task<string[]> GetFeatures();
 
         /// <summary>
         /// Gets the feature definition.
         /// </summary>
         /// <param name="feature">The featureswitch name.</param>
         /// <returns>The definition.</returns>
-        FeatureDefinition? GetFeatureDefinition(string feature);
+        Task<FeatureDefinition?> GetFeatureDefinition(string feature);
     }
 }
