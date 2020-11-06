@@ -22,24 +22,23 @@ Switch application features on, off, or to any defined value.
   * `OnOff` accts as a main switch setting a feature either on or off.
   * `DateTime` to set a feature on or off on a specific date.
   * `ParallelChange` - in conjunction with an evaluation context parameter gives support for the [ParallelChange pattern](https://martinfowler.com/bliki/ParallelChange.html) aka Expand/(Migrate/)Contract pattern.
-  * `SessionFeatureFilter` for stable feature evaluations during the user's session.
-* Optimized for speed
-  * In memory evaluation cache
-    * Singleton by default.
-    * Values are always cached using the evaluation context.
+* Configurable feature evaluation caching
+  * For performance and 'stable' feature state.
+  * Supports multiple caches / cache levels. 
+    * For example
+      * Level-1: In-memory cache with a scoped lifetime.
+      * Level-2: Distributed cache like Redis.
+  * Feature evaluations are cached using the evaluation context.
 * Pluggable feature definition providers
   * `InMemoryFeatureProvider` can be used in automated tests, or as an intermediate.
-* Support for stable feature evaluation during a user's session
-  * Via a `SessionFeatureFilter` applied to session features (preferred)
-  * Or via `SessionFeatureCache`
-* Dependency Injection framework independent
+* Dependency Injection framework independent.
   
 ## Usage
 
 ### Registration
 
 ```C#
-// dotnet add package SoftWine.FeatureSwitches.ServiceCollection
+// dotnet add package FeatureSwitches.ServiceCollection
 
 serviceCollection.AddFeatureSwitches();
 ```
@@ -308,97 +307,4 @@ Out of the box the library ships with a ParallelChange contextual feature filter
     } else {
         Perform_Old_UI();
     }
-    ```
-
-## Session scoped feature evaluation
-
-Some features may require that they are stable during the user's session.
-
-Suppose an admin sets a feature to on while the user is logged in and you don't want the user to get that feature directly. Only when the user logs in again the feature should be on.
-
-There are different solutions to this:
-1. Take a snapshot of the feature state when logging in and keep the state within the session.
-    In a desktop application the state can be kept in a singleton. In a web application the session state is typically kept either in a state cookie, or the state cookie contains an identifier to the state in some (distributed) session store.
-
-    ```C#
-    // Dependency registration
-    serviceCollection.AddScoped<SessionEvaluationCache>();
-    serviceCollection.AddScoped<IFeatureEvaluationCache>(sp => sp.GetRequired<SessionEvaluationCache>());
-    serviceCollection.AddFeatureSwitches(); // Registers FeatureEvaluationCache if no IFeatureEvaluationCache was registered.
-
-    // When logging in fill the session
-    sessionEvaluationCache.ResetState();
-    var featureState = new Dictionary<string, string>();
-    foreach (var feature in await featureService.GetFeatures())
-    {
-        if (IsSessionFeature(feature))
-        {
-            _ = await featureService.GetValue<string>();
-        }
-    }
-
-    TempData["FeatureState"] = sessionEvaluationCache.GetState();
-
-    // Upon a web request (for example via middelware)
-    using (var scope = sp.CreateScope())
-    {
-        var sessionEvaluationCache = sp.ServiceProvider.GetRequired<SessionEvaluationCache>();
-        sessionEvaluationCache.LoadState(TempData["FeatureState"]);
-        DoExecuteRequest();
-        TempData["FeatureState"] = sessionEvaluationCache.GetState();
-    }
-    ```
-
-    This approach has some effects to be aware of:
-    * Login gets delayed depending on the complexity and the number of features.
-    * Can't use contextual feature filters like `ParallelChange`, or perhaps only once when taking the snapshot.
-
-2. Use a session feature filter and set a point-in-time in it's configuration from which the feature is available. Typically that would be when the feature is set to on.
-    ```C#
-    // Use the built-in session feature filter
-    featureDefinitionProvider.SetFeature("SessionFeature", isOn: true);
-    featureDefinitionProvider.SetFeatureFilter("SessionFeature", "Session", config: "{ \"From\": \"2020-11-04\" }");
-
-    var sessionContext = serviceProvider.GetRequired<SessionContext>);
-    sessionContext.LoginTime = DateTimeOffSet.Parse("2020-11-03");
-    Assert.IsFalse(await featureService.IsEnabled("SessionFeature"));
-    sessionContext.LoginTime = DateTimeOffSet.Parse("2020-11-04");
-    Assert.IsTrue(await featureService.IsEnabled("SessionFeature"));
-
-    // Or roll-your-own
-    public class MyAppContext
-    { 
-        public DateTimeOffSet LoginTime { get; set; }
-    }
-
-    public class MySessionFeatureFilterSettings
-    {
-        public DateTimeOffSet From { get; set; }
-    }
-
-    public class MySessionFeatureFilter : IFeatureFilter
-    {
-        private readonly MyAppContext appContext;
-
-        public string Name => "MySession";
-
-        public MyUserFeatureFilter(MyAppContext appContext)
-        {
-            this.appContext = appContext;
-        }
-
-        public async Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
-        {
-            var settings = context.GetSettings<MySessionFeatureFilterSettings>();
-            return this.appContext.LoginTime >= settings.From;
-        }
-    }
-
-    featureDefinitionProvider.SetFeature("SessionFeature", isOn: true);
-    featureDefinitionProvider.SetFeatureFilter("SessionFeature", "MySession", config: "{ \"From\": \"2020-11-04\" }");
-
-    appContext.LoginTime = DateTimeOffSet.Parse("2020-11-03");
-    Assert.IsFalse(await featureService.IsEnabled("SessionFeature"));
-    appContext.LoginTime = DateTimeOffSet.Parse("2020-11-04");
-    Assert.IsTrue(await featureService.IsEnabled("SessionFeature"));
     ```
