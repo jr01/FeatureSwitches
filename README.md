@@ -43,43 +43,48 @@ Switch application features on, off, or to any defined value.
 serviceCollection.AddFeatureSwitches();
 ```
 
-### Feature definition
+### Basic usage
 
 * Define a boolean feature
     ```C#
     var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
-    featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
+    featureDefinitionProvider.SetFeature("MyBoolFeature");
     ```
 
-### Basic usage
+* Add an OnOff filter and switch the feature on
+    ```C#
+    featureDefinitionProvider.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(true));
+    ```
 
-```C#
-public class MyClass
-{
-    private readonly IFeatureService featureService;
+* Use the feature switch
 
-    public Some(IFeatureService featureService)
+    ```C#
+    public class MyClass
     {
-        this.featureService = featureService;
-    }
+        private readonly IFeatureService featureService;
 
-    public void Execute()
-    {
-        if (await this.featureService.IsEnabled("MyBoolFeature"))
+        public Some(IFeatureService featureService)
         {
-            ...
+            this.featureService = featureService;
         }
 
-        // or
-        if (await this.featureService.GetValue<bool>("MyBoolFeature"))
+        public async Task Execute()
         {
-            ...
+            if (await this.featureService.IsEnabled("MyBoolFeature"))
+            {
+                ...
+            }
+
+            // or
+            if (await this.featureService.GetValue<bool>("MyBoolFeature"))
+            {
+                ...
+            }
         }
     }
-}
-```
+    ```
 
-_Note: if the feature hasn't been defined the false is returned._
+    _Note: if the feature hasn't been defined false will be returned._
 
 ### Feature types
 
@@ -92,7 +97,6 @@ _Note: if the feature hasn't been defined the false is returned._
 
     featureDefinitionProvider.SetFeature(
         "DirectionFeature",
-        isOn: true,
         offValue: Direction.Left,
         onValue: Direction.Right );
     ```
@@ -105,7 +109,7 @@ _Note: if the feature hasn't been defined the false is returned._
     }
     ```
 
-    _Note: If the current switch value cannot be converted to the featuretype the offValue is returned._
+    _Note: If the switch value cannot be converted to the featuretype the offValue will be returned._
 
 
 ### Feature evaluation context accessor
