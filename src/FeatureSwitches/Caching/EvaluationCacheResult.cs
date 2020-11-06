@@ -1,4 +1,4 @@
-﻿namespace FeatureSwitches.EvaluationCaching
+﻿namespace FeatureSwitches.Caching
 {
     public class EvaluationCacheResult<TFeatureType>
     {

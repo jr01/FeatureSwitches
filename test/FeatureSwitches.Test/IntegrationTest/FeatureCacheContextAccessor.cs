@@ -1,14 +1,14 @@
 ﻿using System.Security.Claims;
 using System.Threading;
-using FeatureSwitches.EvaluationCaching;
+using FeatureSwitches.Caching;
 
 namespace FeatureSwitches.Test.IntegrationTest
 {
-    public class FeatureContextAccessor : IEvaluationContextAccessor
+    public class FeatureCacheContextAccessor : IFeatureCacheContextAccessor
     {
         private readonly CurrentCustomer currentCustomer;
 
-        public FeatureContextAccessor(CurrentCustomer currentCustomer)
+        public FeatureCacheContextAccessor(CurrentCustomer currentCustomer)
         {
             this.currentCustomer = currentCustomer;
         }

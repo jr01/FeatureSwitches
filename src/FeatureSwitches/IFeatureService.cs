@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace FeatureSwitches
 {
@@ -7,15 +8,17 @@ namespace FeatureSwitches
         /// <summary>
         /// Gets all defined feature switches.
         /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A list of defined featureswitch names.</returns>
-        Task<string[]> GetFeatures();
+        Task<string[]> GetFeatures(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tests if the boolean featureswitch is enabled.
         /// </summary>
         /// <param name="feature">The featureswitch name.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>True if the switch is enabled, false if not enabled or the feature doesn't exist.</returns>
-        Task<bool> IsEnabled(string feature);
+        Task<bool> IsEnabled(string feature, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tests if the boolean featureswitch is enabled within the specified evaluation context.
@@ -23,18 +26,20 @@ namespace FeatureSwitches
         /// </summary>
         /// <param name="feature">The featureswitch name.</param>
         /// <param name="evaluationContext">The evaluationcontext.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <typeparam name="TEvaluationContext">The evaluation context type.</typeparam>
         /// <returns>True if the switch is enabled, false if not enabled or the feature doesn't exist.</returns>
-        Task<bool> IsEnabled<TEvaluationContext>(string feature, TEvaluationContext evaluationContext);
+        Task<bool> IsEnabled<TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the current value of featureswitch.
         /// If the defined featureswitch type doesn't match <typeparamref name="TFeatureType"/> a default is returned.
         /// </summary>
         /// <param name="feature">The featureswitch name.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <typeparam name="TFeatureType">The feature type.</typeparam>
         /// <returns>The current switch value, or a default value if the feature doesn't exist.</returns>
-        Task<TFeatureType> GetValue<TFeatureType>(string feature);
+        Task<TFeatureType> GetValue<TFeatureType>(string feature, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the current value of the featureswitch within the specified evaluation context.
@@ -43,9 +48,10 @@ namespace FeatureSwitches
         /// </summary>
         /// <param name="feature">The featureswitch name.</param>
         /// <param name="evaluationContext">The evaluationcontext.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <typeparam name="TFeatureType">The feature type.</typeparam>
         /// <typeparam name="TEvaluationContext">The evaluation context type.</typeparam>
         /// <returns>The current switch value, or a default value if the feature doesn't exist.</returns>
-        Task<TFeatureType> GetValue<TFeatureType, TEvaluationContext>(string feature, TEvaluationContext evaluationContext);
+        Task<TFeatureType> GetValue<TFeatureType, TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
     }
 }

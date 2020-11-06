@@ -2,10 +2,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using FeatureSwitches.Caching;
 using FeatureSwitches.Definitions;
-using FeatureSwitches.EvaluationCaching;
 using FeatureSwitches.Filters;
 
 namespace FeatureSwitches
@@ -16,49 +18,56 @@ namespace FeatureSwitches
     public class FeatureService : IFeatureService
     {
         private readonly IFeatureDefinitionProvider featureDefinitionProvider;
+        private readonly IEnumerable<IFeatureCache> featureEvaluationCaches;
         private readonly IEnumerable<IFeatureFilterMetadata> filters;
-        private readonly IFeatureEvaluationCache featureEvaluationCache;
-        private readonly IEvaluationContextAccessor featureContextProvider;
+        private readonly IFeatureCacheContextAccessor featureContextProvider;
         private readonly ConcurrentDictionary<string, IFeatureFilterMetadata> featureFilterMetadataCache =
             new ConcurrentDictionary<string, IFeatureFilterMetadata>();
 
         public FeatureService(
             IFeatureDefinitionProvider featureDefinitionProvider,
-            IFeatureEvaluationCache featureEvaluationCache,
-            IEvaluationContextAccessor featureContextProvider,
+            IEnumerable<IFeatureCache> featureEvaluationCaches,
+            IFeatureCacheContextAccessor featureContextProvider,
             IEnumerable<IFeatureFilterMetadata> filters)
         {
             this.featureDefinitionProvider = featureDefinitionProvider;
+            this.featureEvaluationCaches = featureEvaluationCaches;
             this.filters = filters;
-            this.featureEvaluationCache = featureEvaluationCache;
             this.featureContextProvider = featureContextProvider;
         }
 
-        public Task<bool> IsEnabled(string feature) =>
-            this.GetValue<bool>(feature);
+        public Task<bool> IsEnabled(string feature, CancellationToken cancellationToken = default) =>
+            this.GetValue<bool>(feature, cancellationToken);
 
-        public Task<bool> IsEnabled<TEvaluationContext>(string feature, TEvaluationContext evaluationContext) =>
-            this.GetValue<bool, TEvaluationContext>(feature, evaluationContext);
+        public Task<bool> IsEnabled<TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default) =>
+            this.GetValue<bool, TEvaluationContext>(feature, evaluationContext, cancellationToken);
 
-        public Task<TFeatureType> GetValue<TFeatureType>(string feature) =>
-            this.GetValue<TFeatureType, object>(feature, null!);
+        public Task<TFeatureType> GetValue<TFeatureType>(string feature, CancellationToken cancellationToken = default) =>
+            this.GetValue<TFeatureType, object>(feature, null!, cancellationToken);
 
-        public async Task<TFeatureType> GetValue<TFeatureType, TEvaluationContext>(string feature, TEvaluationContext evaluationContext)
+        public async Task<TFeatureType> GetValue<TFeatureType, TEvaluationContext>(
+            string feature,
+            TEvaluationContext evaluationContext,
+            CancellationToken cancellationToken = default)
         {
-            var sessionContextValue = JsonSerializer.Serialize(new
+            var cacheContext = this.GetCacheContext(evaluationContext);
+            foreach (var cache in this.featureEvaluationCaches)
             {
-                Exec = this.featureContextProvider.GetContext(),
-                Eval = evaluationContext
-            });
-
-            var evalutionCachedResult = await this.featureEvaluationCache.GetItem<TFeatureType>(feature, sessionContextValue).ConfigureAwait(false);
-            if (evalutionCachedResult != null)
-            {
-                return evalutionCachedResult.Result;
+                var evalutionCachedResult = await cache.GetItem(feature, cacheContext, cancellationToken).ConfigureAwait(false);
+                if (evalutionCachedResult != null)
+                {
+                    try
+                    {
+                        return JsonSerializer.Deserialize<TFeatureType>(evalutionCachedResult);
+                    }
+                    catch (JsonException)
+                    {
+                    }
+                }
             }
 
             TFeatureType switchValue = default!;
-            var evaluationResult = await this.GetSerializedSwitchValue(feature, evaluationContext).ConfigureAwait(false);
+            var evaluationResult = await this.GetSerializedSwitchValue(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
             if (evaluationResult.IsEnabled)
             {
                 try
@@ -70,41 +79,71 @@ namespace FeatureSwitches
                 }
             }
 
-            await this.featureEvaluationCache.SetItem(feature, sessionContextValue, switchValue).ConfigureAwait(false);
+            var options = new FeatureCacheOptions();
+            foreach (var cache in this.featureEvaluationCaches)
+            {
+                await cache.SetItem(feature, cacheContext, evaluationResult.SerializedSwitchValue, options, cancellationToken).ConfigureAwait(false);
+            }
 
             return switchValue;
         }
 
-        public Task<string[]> GetFeatures()
+        public Task<string[]> GetFeatures(CancellationToken cancellationToken = default)
         {
-            return this.featureDefinitionProvider.GetFeatures();
+            return this.featureDefinitionProvider.GetFeatures(cancellationToken);
         }
 
-        private static Task<bool> EvaluateFilter<TEvaluationContext>(IFeatureFilterMetadata filter, FeatureFilterEvaluationContext context, TEvaluationContext evaluationContext)
+        private static Task<bool> EvaluateFilter<TEvaluationContext>(IFeatureFilterMetadata filter, FeatureFilterEvaluationContext context, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default)
         {
             if (filter is IFeatureFilter featureFilter)
             {
-                return featureFilter.IsEnabled(context);
+                return featureFilter.IsEnabled(context, cancellationToken);
             }
 
             if (filter is IContextualFeatureFilter contextualFeatureFilter)
             {
-                return contextualFeatureFilter.IsEnabled(context, evaluationContext);
+                return contextualFeatureFilter.IsEnabled(context, evaluationContext, cancellationToken);
             }
 
             return Task.FromResult(false);
         }
 
+        private string GetCacheContext<TEvaluationContext>(TEvaluationContext evaluationContext)
+        {
+            // ToDo: should this featureContextProvider really be here? Or should this
+            //       be left upto a specific Cache implementation?
+            //       It could even depend on a filter? If there is no 'customerfilter'
+            //       attached to a feature then it can be cached regardless of customer.
+            var exec = this.featureContextProvider.GetContext();
+            if (exec == null && evaluationContext == null)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                var bytesToHash = JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    Exec = exec,
+                    Eval = evaluationContext
+                });
+
+                using var hasher = SHA256.Create();
+                var result = hasher.ComputeHash(bytesToHash);
+                return BitConverter.ToString(result).Trim(new char[] { '-' });
+            }
+        }
+
         private async Task<EvaluationResult> GetSerializedSwitchValue<TEvaluationContext>(
             string feature,
-            TEvaluationContext evaluationContext)
+            TEvaluationContext evaluationContext,
+            CancellationToken cancellationToken)
         {
             var evalutionResult = new EvaluationResult
             {
                 IsEnabled = false
             };
 
-            var featureDefinition = await this.featureDefinitionProvider.GetFeatureDefinition(feature).ConfigureAwait(false);
+            var featureDefinition = await this.featureDefinitionProvider.GetFeatureDefinition(feature, cancellationToken).ConfigureAwait(false);
             if (featureDefinition == null)
             {
                 return evalutionResult;
@@ -123,7 +162,7 @@ namespace FeatureSwitches
                     var filter = this.GetFeatureFilter(featureFilterDefinition);
 
                     var context = new FeatureFilterEvaluationContext(feature, featureFilterDefinition.Config);
-                    var isEnabled = await EvaluateFilter(filter, context, evaluationContext).ConfigureAwait(false);
+                    var isEnabled = await EvaluateFilter(filter, context, evaluationContext, cancellationToken).ConfigureAwait(false);
                     if (isEnabled)
                     {
                         evalutionResult.SerializedSwitchValue = featureFilterDefinition.Group.OnValue;

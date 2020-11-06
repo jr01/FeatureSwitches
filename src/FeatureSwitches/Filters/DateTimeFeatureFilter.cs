@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FeatureSwitches.Filters
@@ -19,7 +20,7 @@ namespace FeatureSwitches.Filters
 
         public string Name => "DateTime";
 
-        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
+        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
         {
             var now = this.dateTimeResolver();
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FeatureSwitches.Definitions
@@ -9,21 +10,18 @@ namespace FeatureSwitches.Definitions
     public interface IFeatureDefinitionProvider
     {
         /// <summary>
-        /// A featureswitch definition has changed.
-        /// </summary>
-        event EventHandler<FeatureDefinitionChangeEventArgs> Changed;
-
-        /// <summary>
         /// Gets a list of featureswitches.
         /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The names of all defined featureswitches.</returns>
-        Task<string[]> GetFeatures();
+        Task<string[]> GetFeatures(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the feature definition.
         /// </summary>
         /// <param name="feature">The featureswitch name.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The definition.</returns>
-        Task<FeatureDefinition?> GetFeatureDefinition(string feature);
+        Task<FeatureDefinition?> GetFeatureDefinition(string feature, CancellationToken cancellationToken = default);
     }
 }

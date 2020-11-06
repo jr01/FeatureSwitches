@@ -16,7 +16,7 @@ namespace FeatureSwitches.Test.IntegrationTest
 
         public string Name => "Customer";
 
-        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
+        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
         {
             var settings = context.GetSettings<CustomerFeatureFilterSettings>();
 

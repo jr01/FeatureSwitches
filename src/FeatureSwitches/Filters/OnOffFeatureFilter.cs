@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace FeatureSwitches.Filters
 {
@@ -6,7 +7,7 @@ namespace FeatureSwitches.Filters
     {
         public string Name => "OnOff";
 
-        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
+        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
         {
             var settings = context.GetSettings<ScalarValueSetting<bool>>();
             return Task.FromResult(settings.Setting);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FeatureSwitches.Filters
@@ -14,7 +15,7 @@ namespace FeatureSwitches.Filters
 
         public string Name => "Session";
 
-        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
+        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
         {
             var settings = context.GetSettings<SessionFeatureFilterSettings>();
             var isEnabled = DateTimeOffset.Compare(this.sessionContext.LoginTime, settings.From) >= 0;

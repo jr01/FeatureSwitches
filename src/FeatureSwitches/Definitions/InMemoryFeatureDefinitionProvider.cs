@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using FeatureSwitches.Caching;
 using FeatureSwitches.Filters;
 
 namespace FeatureSwitches.Definitions
@@ -23,15 +25,20 @@ namespace FeatureSwitches.Definitions
         private readonly ConcurrentDictionary<string, FeatureDefinition?> filterDefinitionCache =
             new ConcurrentDictionary<string, FeatureDefinition?>();
 
-        public event EventHandler<FeatureDefinitionChangeEventArgs>? Changed;
+        private readonly IEnumerable<IFeatureCache> featureEvaluationCaches;
 
-        public Task<string[]> GetFeatures()
+        public InMemoryFeatureDefinitionProvider(IEnumerable<IFeatureCache> featureEvaluationCaches)
+        {
+            this.featureEvaluationCaches = featureEvaluationCaches;
+        }
+
+        public Task<string[]> GetFeatures(CancellationToken cancellationToken = default)
         {
             var features = this.featureSwitches.Keys.ToArray();
             return Task.FromResult(features);
         }
 
-        public Task<FeatureDefinition?> GetFeatureDefinition(string feature)
+        public Task<FeatureDefinition?> GetFeatureDefinition(string feature, CancellationToken cancellationToken = default)
         {
             var definition = this.filterDefinitionCache.GetOrAdd(feature, x =>
             {
@@ -79,25 +86,22 @@ namespace FeatureSwitches.Definitions
         /// Adds a definition for a <see cref="bool"/> feature.
         /// </summary>
         /// <param name="feature">The feature.</param>
-        /// <param name="isOn">If the feature should be On.</param>
-        public void SetFeature(string feature, bool isOn = false) =>
-            this.SetFeature<bool>(feature, isOn: isOn, offValue: false, onValue: true);
+        public void SetFeature(string feature) =>
+            this.SetFeature<bool>(feature, offValue: false, onValue: true);
 
         /// <summary>
         /// Adds a definition for a typed feature.
         /// </summary>
         /// <typeparam name="TFeatureType">The feature type.</typeparam>
         /// <param name="feature">The feature.</param>
-        /// <param name="isOn">If the feature should be On.</param>
         /// <param name="offValue">The value to return when the feature is off.</param>
         /// <param name="onValue">The value to return when the feature is on and no feature groups have been defined.</param>
-        public void SetFeature<TFeatureType>(string feature, bool isOn = false, TFeatureType offValue = default, TFeatureType onValue = default)
+        public void SetFeature<TFeatureType>(string feature, TFeatureType offValue = default, TFeatureType onValue = default)
         {
             this.featureSwitches[feature] = JsonSerializer.SerializeToUtf8Bytes(offValue);
 
             // Add the null group with the onValue and add an OnOff featurefilter as the first feature filter.
             this.SetFeatureGroup(feature, group: null, onValue: onValue);
-            this.SetFeatureFilter(feature, "OnOff", config: new ScalarValueSetting<bool>(isOn), group: null);
         }
 
         /// <summary>
@@ -173,7 +177,10 @@ namespace FeatureSwitches.Definitions
         {
             this.filterDefinitionCache.TryRemove(feature, out _);
 
-            this.Changed?.Invoke(this, new FeatureDefinitionChangeEventArgs(feature));
+            foreach (var cache in this.featureEvaluationCaches)
+            {
+                cache.Remove(feature).GetAwaiter().GetResult();
+            }
         }
 
         private class InMemoryFeatureFilter

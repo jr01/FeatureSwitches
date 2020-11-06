@@ -5,8 +5,8 @@ using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using FeatureSwitches.Caching;
 using FeatureSwitches.Definitions;
-using FeatureSwitches.EvaluationCaching;
 using FeatureSwitches.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -24,11 +24,11 @@ namespace FeatureSwitches.Test.IntegrationTest
 
             serviceCollection.AddScoped<CurrentCustomer>();
 
-            serviceCollection.AddFeatureSwitches();
+            serviceCollection.AddFeatureSwitches(addScopedCache: true);
 
             serviceCollection.AddScoped<IFeatureFilterMetadata, CustomerFeatureFilter>();
 
-            serviceCollection.AddScoped<IEvaluationContextAccessor, FeatureContextAccessor>();
+            serviceCollection.AddScoped<IFeatureCacheContextAccessor, FeatureCacheContextAccessor>();
 
             this.sp = new DefaultServiceProviderFactory()
                 .CreateBuilder(serviceCollection)
@@ -53,10 +53,12 @@ namespace FeatureSwitches.Test.IntegrationTest
         }
 
         [TestMethod]
-        public async Task Main_switch()
+        public async Task On_off_filter()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", isOn: true);
+            featureDatabase.SetFeature("FeatureA");
+            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(true), group: null);
+
             featureDatabase.SetFeature("FeatureB");
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
@@ -68,7 +70,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Customer_filter_with_thread_identity()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", isOn: true, offValue: false);
+            featureDatabase.SetFeature("FeatureA", offValue: false);
             featureDatabase.SetFeatureGroup("FeatureA", true);
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } });
 
@@ -82,7 +84,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         }
 
         [TestMethod]
-        public async Task Evaluation_Speed()
+        public async Task Speed_single_scope()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
             featureDatabase.SetFeature("FeatureA", offValue: false);
@@ -98,13 +100,30 @@ namespace FeatureSwitches.Test.IntegrationTest
         }
 
         [TestMethod]
-        public async Task Speed_Many_features()
+        public async Task Speed_multi_scope()
+        {
+            var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
+            featureDatabase.SetFeature("FeatureA", offValue: false);
+            featureDatabase.SetFeatureGroup("FeatureA", null, true);
+            featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } });
+
+            SetCurrentCustomer("A");
+            for (var i = 0; i < 10000; i++)
+            {
+                using var scope = this.sp.CreateScope();
+                var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
+                await featureService.IsEnabled("FeatureA");
+            }
+        }
+
+        [TestMethod]
+        public async Task Speed_many_features_single_scope()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
             const int ActiveFeatureCount = 1000;
             for (int i = 0; i < ActiveFeatureCount; i++)
             {
-                featureDatabase.SetFeature($"Feature{i}", isOn: true);
+                featureDatabase.SetFeature($"Feature{i}");
             }
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
@@ -127,7 +146,6 @@ namespace FeatureSwitches.Test.IntegrationTest
         [TestMethod]
         public async Task Feature_not_defined()
         {
-            // ToDo: Or should we throw when we don't know the feature?
             var featureService = this.sp.GetRequiredService<FeatureService>();
             Assert.IsFalse(await featureService.IsEnabled("Chicken"));
             Assert.IsFalse(await featureService.GetValue<bool>("Chicken"));
@@ -135,10 +153,21 @@ namespace FeatureSwitches.Test.IntegrationTest
         }
 
         [TestMethod]
+        public async Task Feature_is_off_when_no_filters_defined()
+        {
+            var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
+            featureDatabase.SetFeature("Egg");
+
+            var featureService = this.sp.GetRequiredService<FeatureService>();
+
+            Assert.IsFalse(await featureService.IsEnabled("Egg"));
+        }
+
+        [TestMethod]
         public async Task Groups()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", isOn: true, offValue: false);
+            featureDatabase.SetFeature("FeatureA", offValue: false);
             featureDatabase.SetFeatureGroup("FeatureA", null, true);
             featureDatabase.SetFeatureGroup("FeatureA", "GroupA", true);
             featureDatabase.SetFeatureGroup("FeatureA", "GroupB", true);
@@ -160,7 +189,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Customer_filter_with_scoped_customer()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", isOn: true, offValue: false);
+            featureDatabase.SetFeature("FeatureA", offValue: false);
             featureDatabase.SetFeatureGroup("FeatureA", null, true);
             featureDatabase.SetFeatureGroup("FeatureA", "GroupA", true);
             featureDatabase.SetFeatureGroup("FeatureA", "GroupB", true);
@@ -195,7 +224,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Group_with_main_switch_in_main_group()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", isOn: false);
+            featureDatabase.SetFeature("FeatureA");
 
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\", \"C\"] }", "GroupA");
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
@@ -214,7 +243,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
 
-            featureDatabase.SetFeature("FeatureA", isOn: true, offValue: MultiSwitch.Off, onValue: MultiSwitch.On);
+            featureDatabase.SetFeature("FeatureA", offValue: MultiSwitch.Off, onValue: MultiSwitch.On);
             featureDatabase.SetFeatureGroup("FeatureA", "GroupA", MultiSwitch.Halfway);
             featureDatabase.SetFeatureGroup("FeatureA", "GroupB", MultiSwitch.On);
 
@@ -238,7 +267,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             var offVariation = new TestVariation { Color = Color.Black };
             var defaultOnVariation = new TestVariation { Color = Color.White };
             var halfWayVariation = new TestVariation { Color = Color.Gray };
-            featureDatabase.SetFeature("FeatureA", isOn: true, offValue: offVariation, onValue: defaultOnVariation);
+            featureDatabase.SetFeature("FeatureA", offValue: offVariation, onValue: defaultOnVariation);
 
             featureDatabase.SetFeatureGroup("FeatureA", "GroupA", halfWayVariation);
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }", "GroupA");
@@ -262,7 +291,8 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Update_feature_filter()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", isOn: true);
+            featureDatabase.SetFeature("FeatureA");
+            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(true), group: null);
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [] }");
 
             using (var scope = this.sp.CreateScope())
@@ -286,46 +316,54 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Parallel_change()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", isOn: false);
-            featureDatabase.SetFeatureGroup("FeatureA");
+            featureDatabase.SetFeature("FeatureA");
+            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(false), group: null);
 
             featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"Setting\": \"Expanded\" }");
 
-            using var scope = this.sp.CreateScope();
-            var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
+            using (var scope = this.sp.CreateScope())
+            {
+                var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
 
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+                Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
+                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
+                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+            }
 
-            featureDatabase.SetFeature("FeatureA", isOn: true);
+            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(true), group: null);
 
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+            using (var scope = this.sp.CreateScope())
+            {
+                var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
+
+                Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
+                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
+                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+            }
 
             featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"Setting\": \"Migrated\" }");
 
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+            using (var scope = this.sp.CreateScope())
+            {
+                var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
+                Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
+                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
+                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
+                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+            }
 
             featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"Setting\": \"Contracted\" }");
 
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
-
-            // usage code is like
-            // data_write:
-            //      if (!contracted) OldBehavior()
-            //      if (!expanded) NewBehavior()
-            // UI: if (!migrated) OldUI() else NewUI()
-            // FrontEnd if(enabled (==migrated!)) OldUI() else NewUI()
+            using (var scope = this.sp.CreateScope())
+            {
+                var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
+                Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
+                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
+                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
+                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+            }
         }
 
         [TestMethod]

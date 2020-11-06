@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FeatureSwitches.Filters
@@ -7,7 +8,7 @@ namespace FeatureSwitches.Filters
     {
         public override string Name => "ParallelChange";
 
-        public override Task<bool> IsEnabled(FeatureFilterEvaluationContext context, ParallelChange evaluationContext)
+        public override Task<bool> IsEnabled(FeatureFilterEvaluationContext context, ParallelChange evaluationContext, CancellationToken cancellationToken = default)
         {
             var scalar = context.GetSettings<ScalarValueSetting<ParallelChange>>();
             var isEnabled = scalar.Setting switch
