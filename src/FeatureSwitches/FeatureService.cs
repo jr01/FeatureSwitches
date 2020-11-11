@@ -50,39 +50,47 @@ namespace FeatureSwitches
             TEvaluationContext evaluationContext,
             CancellationToken cancellationToken = default)
         {
+            var rawValue = await this.GetRawValue<TEvaluationContext>(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                return JsonSerializer.Deserialize<TFeatureType>(rawValue);
+            }
+            catch (JsonException)
+            {
+            }
+
+            return default!;
+        }
+
+        public Task<byte[]?> GetRawValue(string feature, CancellationToken cancellationToken = default) =>
+            this.GetRawValue(feature, cancellationToken);
+
+        public async Task<byte[]?> GetRawValue<TEvaluationContext>(
+            string feature,
+            TEvaluationContext evaluationContext,
+            CancellationToken cancellationToken = default)
+        {
             var cacheContext = this.GetCacheContext(evaluationContext);
             foreach (var cache in this.featureEvaluationCaches)
             {
                 var evalutionCachedResult = await cache.GetItem(feature, cacheContext, cancellationToken).ConfigureAwait(false);
                 if (evalutionCachedResult != null)
                 {
-                    try
-                    {
-                        return JsonSerializer.Deserialize<TFeatureType>(evalutionCachedResult);
-                    }
-                    catch (JsonException)
-                    {
-                    }
+                    return evalutionCachedResult;
                 }
             }
 
-            TFeatureType switchValue = default!;
+            byte[]? switchValue = default!;
             var evaluationResult = await this.GetSerializedSwitchValue(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
             if (evaluationResult.IsEnabled)
             {
-                try
-                {
-                    switchValue = JsonSerializer.Deserialize<TFeatureType>(evaluationResult.SerializedSwitchValue);
-                }
-                catch (JsonException)
-                {
-                }
+                switchValue = evaluationResult.SerializedSwitchValue;
             }
 
             var options = new FeatureCacheOptions();
             foreach (var cache in this.featureEvaluationCaches)
             {
-                await cache.SetItem(feature, cacheContext, evaluationResult.SerializedSwitchValue, options, cancellationToken).ConfigureAwait(false);
+                await cache.SetItem(feature, cacheContext, switchValue, options, cancellationToken).ConfigureAwait(false);
             }
 
             return switchValue;

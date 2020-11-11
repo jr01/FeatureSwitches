@@ -53,5 +53,24 @@ namespace FeatureSwitches
         /// <typeparam name="TEvaluationContext">The evaluation context type.</typeparam>
         /// <returns>The current switch value, or a default value if the feature doesn't exist.</returns>
         Task<TFeatureType> GetValue<TFeatureType, TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets the current raw value of the featureswitch.
+        /// </summary>
+        /// <param name="feature">The featureswitch name.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The current switch value, or null if the feature doesn't exist.</returns>
+        public Task<byte[]?> GetRawValue(string feature, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets the current raw value of the featureswitch within the specified evaluation context.
+        /// The evaluation context is passed into featurefilter's that implement <see cref="Filters.IContextualFeatureFilter"/>.
+        /// </summary>
+        /// <param name="feature">The featureswitch name.</param>
+        /// <param name="evaluationContext">The evaluationcontext.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <typeparam name="TEvaluationContext">The evaluation context type.</typeparam>
+        /// <returns>The current switch value, or null if the feature doesn't exist.</returns>
+        public Task<byte[]?> GetRawValue<TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
     }
 }
