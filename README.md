@@ -14,12 +14,12 @@ Switch application features on, off, or to any defined value.
         ...
 ```
 * Feature filters and filter groups, allowing for complex rule evaluation.
+* Turn a feature on/off on feature and filter group level. (aka kill-switch)
 * Contextual feature evaluation.
   * Via evaluation context parameter: `bool isEnabled = featureService.IsEnabled("feature", evaluationContext: "mycontext");`
   * Via evaluation context accessor. `serviceCollection.AddScoped<IEvaluationContextAccessor, MyEvaluationContextAccessor>()`
   * Both parameter and accessor can be combined together.
-* Out-of-the-box feature filters  
-  * `OnOff` accts as a main switch setting a feature either on or off.
+* Out-of-the-box feature filters
   * `DateTime` to set a feature on or off on a specific date.
   * `ParallelChange` - in conjunction with an evaluation context parameter gives support for the [ParallelChange pattern](https://martinfowler.com/bliki/ParallelChange.html) aka Expand/(Migrate/)Contract pattern.
 * Configurable feature evaluation caching
@@ -32,6 +32,10 @@ Switch application features on, off, or to any defined value.
 * Pluggable feature definition providers
   * `InMemoryFeatureProvider` can be used in automated tests, or as an intermediate.
 * Dependency Injection framework independent.
+
+## Important!
+
+All 1.0.* versions contain breaking changes. From 1.1 semantic versioning will be followed.
   
 ## Usage
 
@@ -48,13 +52,10 @@ serviceCollection.AddFeatureSwitches();
 * Define a boolean feature
     ```C#
     var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
-    featureDefinitionProvider.SetFeature("MyBoolFeature");
+    featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
     ```
 
-* Add an OnOff filter and switch the feature on
-    ```C#
-    featureDefinitionProvider.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(true));
-    ```
+    _Note: the feature is on by default, use `isOn` to turn the feature off_
 
 * Use the feature switch
 
@@ -97,6 +98,7 @@ serviceCollection.AddFeatureSwitches();
 
     featureDefinitionProvider.SetFeature(
         "DirectionFeature",
+        isOn: true,
         offValue: Direction.Left,
         onValue: Direction.Right );
     ```
@@ -199,9 +201,10 @@ A feature is on when all applied feature filters decide that the feature should 
     ```
 
 * Feature filter groups
+
     A feature is on when the first filter group decides the feature should be on.
     A feature filter group has one or more feature filters.
-    Each filter group defines it's 'OnValue'.
+    Each filter group defines it's `OnValue` and `isOn`.
 
     ```C#
     public enum AB
@@ -213,8 +216,8 @@ A feature is on when all applied feature filters decide that the feature should 
 
     var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
     featureDefinitionProvider.SetFeature<AB>("Feature", isOn: true, offValue: AB.Off);
-    featureDefinitionProvider.SetFeatureGroup("Feature", "GroupA", onValue: AB.A);
-    featureDefinitionProvider.SetFeatureGroup("Feature", "GroupB", onValue: AB.B);
+    featureDefinitionProvider.SetFeatureGroup("Feature", "GroupA", isOn:true, onValue: AB.A);
+    featureDefinitionProvider.SetFeatureGroup("Feature", "GroupB", isOn:true, onValue: AB.B);
 
     featureDefinitionProvider.SetFeatureFilter("Feature", "User", group: "GroupA", config: new MyUserFeatureFilterSettings { AllowedNames = new HashSet<string> { "John" } });
 

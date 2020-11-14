@@ -7,20 +7,16 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using FeatureSwitches.Caching;
-using FeatureSwitches.Filters;
 
 namespace FeatureSwitches.Definitions
 {
     public class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvider
     {
-        private readonly Dictionary<string, byte[]> featureSwitches =
-            new Dictionary<string, byte[]>();
+        private readonly Dictionary<string, FeatureDefinition> featureSwitches =
+            new Dictionary<string, FeatureDefinition>();
 
-        private readonly Dictionary<string, byte[]> featureFilterGroups =
-            new Dictionary<string, byte[]>();
-
-        private readonly Dictionary<string, List<InMemoryFeatureFilter>> featureFilters =
-            new Dictionary<string, List<InMemoryFeatureFilter>>();
+        private readonly Dictionary<string, FeatureFilterGroupDefinition> featureFilterGroups =
+            new Dictionary<string, FeatureFilterGroupDefinition>();
 
         private readonly ConcurrentDictionary<string, FeatureDefinition?> filterDefinitionCache =
             new ConcurrentDictionary<string, FeatureDefinition?>();
@@ -57,17 +53,34 @@ namespace FeatureSwitches.Definitions
         /// <param name="group">An optional feature filter group.</param>
         public void SetFeatureFilter(string feature, string featureFilterName, object? config = null, string? group = null)
         {
-            if (!this.featureFilters.TryGetValue(feature, out var filters))
+            if (!this.featureSwitches.TryGetValue(feature, out var definition))
             {
-                filters = new List<InMemoryFeatureFilter>();
-                this.featureFilters.Add(feature, filters);
+                throw new InvalidOperationException($"Feature {feature} must be defined first.");
             }
 
-            var filter = filters.FirstOrDefault(x => x.Type == featureFilterName && x.Group == group);
+            var filter = definition.FeatureFilters.FirstOrDefault(x => x.Type == featureFilterName && x.Group?.Name == group);
             if (filter == null)
             {
-                filter = new InMemoryFeatureFilter { Type = featureFilterName, Group = group };
-                filters.Add(filter);
+                filter = new FeatureFilterDefinition
+                {
+                    Type = featureFilterName,
+                };
+
+                definition.FeatureFilters.Add(filter);
+            }
+
+            if (group == null)
+            {
+                filter.Group = null;
+            }
+            else
+            {
+                if (!this.featureFilterGroups.TryGetValue(feature + "." + group, out var groupDefinition))
+                {
+                    throw new InvalidOperationException($"Feature group {group} must be defined first for feature {feature}");
+                }
+
+                filter.Group = groupDefinition;
             }
 
             if (config is string stringConfig)
@@ -86,40 +99,41 @@ namespace FeatureSwitches.Definitions
         /// Adds a definition for a <see cref="bool"/> feature.
         /// </summary>
         /// <param name="feature">The feature.</param>
-        public void SetFeature(string feature) =>
-            this.SetFeature<bool>(feature, offValue: false, onValue: true);
+        /// <param name="isOn">If the feature should be on or off, on by default.</param>
+        public void SetFeature(string feature, bool isOn = true) =>
+            this.SetFeature<bool>(feature, isOn: isOn, offValue: false, onValue: true);
 
         /// <summary>
         /// Adds a definition for a typed feature.
         /// </summary>
         /// <typeparam name="TFeatureType">The feature type.</typeparam>
         /// <param name="feature">The feature.</param>
+        /// <param name="isOn">If the feature should be on or off, on by default.</param>
         /// <param name="offValue">The value to return when the feature is off.</param>
         /// <param name="onValue">The value to return when the feature is on and no feature groups have been defined.</param>
-        public void SetFeature<TFeatureType>(string feature, TFeatureType offValue = default, TFeatureType onValue = default)
+        public void SetFeature<TFeatureType>(string feature, bool isOn = true, TFeatureType offValue = default, TFeatureType onValue = default)
         {
-            this.featureSwitches[feature] = JsonSerializer.SerializeToUtf8Bytes(offValue);
+            if (!this.featureSwitches.TryGetValue(feature, out var definition))
+            {
+                definition = new FeatureDefinition();
+                this.featureSwitches.Add(feature, definition);
+            }
 
-            // Add the null group with the onValue and add an OnOff featurefilter as the first feature filter.
-            this.SetFeatureGroup(feature, group: null, onValue: onValue);
+            definition.OffValue = JsonSerializer.SerializeToUtf8Bytes(offValue);
+            definition.OnValue = JsonSerializer.SerializeToUtf8Bytes(onValue);
+            definition.IsOn = isOn;
+
+            this.Reload(feature);
         }
-
-        /// <summary>
-        /// Defines a feature filter group.
-        /// </summary>
-        /// <typeparam name="TFeatureType">The feature type.</typeparam>
-        /// <param name="feature">The feature name.</param>
-        /// <param name="onValue">The value to return when the feature is on and the group matches.</param>
-        public void SetFeatureGroup<TFeatureType>(string feature, TFeatureType onValue) =>
-            this.SetFeatureGroup(feature, null, onValue);
 
         /// <summary>
         /// Defines a feature filter group for a <see cref="bool"/> feature.
         /// </summary>
         /// <param name="feature">The feature name.</param>
         /// <param name="group">The group name.</param>
-        public void SetFeatureGroup(string feature, string? group = null) =>
-            this.SetFeatureGroup<bool>(feature, group, true);
+        /// <param name="isOn">If the feature filter group should be on or off, on by default.</param>
+        public void SetFeatureGroup(string feature, string group, bool isOn = true) =>
+            this.SetFeatureGroup<bool>(feature, group, isOn: isOn, onValue: true);
 
         /// <summary>
         /// Defines a feature filter group for a typed feature.
@@ -127,47 +141,30 @@ namespace FeatureSwitches.Definitions
         /// <typeparam name="TFeatureType">The feature type.</typeparam>
         /// <param name="feature">The feature.</param>
         /// <param name="group">The feature filter group.</param>
+        /// <param name="isOn">If the feature filter group should be on or off, on by default.</param>
         /// <param name="onValue">The value to return when the feature is on and the group matches.</param>
-        public void SetFeatureGroup<TFeatureType>(string feature, string? group = null, TFeatureType onValue = default)
+        public void SetFeatureGroup<TFeatureType>(string feature, string group, bool isOn = true, TFeatureType onValue = default)
         {
-            this.featureFilterGroups[feature + "." + (group ?? string.Empty)] = JsonSerializer.SerializeToUtf8Bytes(onValue);
+            if (!this.featureSwitches.ContainsKey(feature))
+            {
+                throw new InvalidOperationException($"Feature {feature} must be defined first.");
+            }
+
+            this.featureFilterGroups[feature + "." + group] = new FeatureFilterGroupDefinition
+            {
+                OnValue = JsonSerializer.SerializeToUtf8Bytes(onValue),
+                IsOn = isOn,
+                Name = group
+            };
 
             this.Reload(feature);
         }
 
         private FeatureDefinition? GetFeatureDefinitionInternal(string feature)
         {
-            var definition = new FeatureDefinition { };
-            if (this.featureSwitches.TryGetValue(feature, out var switchValue))
-            {
-                definition.OffValue = switchValue;
-            }
-            else
+            if (!this.featureSwitches.TryGetValue(feature, out var definition))
             {
                 return null;
-            }
-
-            if (this.featureFilters.TryGetValue(feature, out var filters))
-            {
-                foreach (var filter in filters)
-                {
-                    var filterGroup = new FeatureFilterGroupDefinition
-                    {
-                        Name = filter.Group,
-                        OnValue = Array.Empty<byte>()
-                    };
-                    if (this.featureFilterGroups.TryGetValue(feature + "." + (filter.Group ?? string.Empty), out var filterGroupValue))
-                    {
-                        filterGroup.OnValue = filterGroupValue;
-                    }
-
-                    definition.FeatureFilters.Add(new FeatureFilterDefinition
-                    {
-                        Type = filter.Type,
-                        Config = filter.Config,
-                        Group = filterGroup
-                    });
-                }
             }
 
             return definition;
@@ -181,15 +178,6 @@ namespace FeatureSwitches.Definitions
             {
                 cache.Remove(feature).GetAwaiter().GetResult();
             }
-        }
-
-        private class InMemoryFeatureFilter
-        {
-            public string Type { get; set; } = string.Empty;
-
-            public byte[] Config { get; set; } = null!;
-
-            public string? Group { get; set; }
         }
     }
 }

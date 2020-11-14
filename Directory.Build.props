@@ -32,8 +32,7 @@
           Reason:
             The tooling doesn't help with it and it's annoying.
           [SA1413: Trailing comma in multiline initializers]
-          Reason:
-            Auto generated EF migratino code.
+          Reason: annoying.
           [SA1512: Singe line comments should not be followed by blank line]
           Reason: annoying
           [SA1515: Singe line comments should be preceded by blank line]

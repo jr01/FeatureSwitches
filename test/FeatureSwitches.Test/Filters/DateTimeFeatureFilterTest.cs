@@ -65,6 +65,20 @@ namespace FeatureSwitches.Test.Filters
             Assert.IsFalse(await filter.IsEnabled(context).ConfigureAwait(false));
         }
 
+        [TestMethod]
+        public async Task DateTimeFilter_without_from_and_to()
+        {
+            var now = DateTimeOffset.Parse("2020-11-03", CultureInfo.InvariantCulture);
+            var filter = new DateTimeFeatureFilter(() => { return now; });
+            var context = GetContext(new DateTimeFeatureFilterSettings
+            {
+                From = null,
+                To = null
+            });
+
+            Assert.IsTrue(await filter.IsEnabled(context).ConfigureAwait(false));
+        }
+
         private static FeatureFilterEvaluationContext GetContext(DateTimeFeatureFilterSettings settings)
         {
             return new FeatureFilterEvaluationContext("A", JsonSerializer.SerializeToUtf8Bytes(settings));

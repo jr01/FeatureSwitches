@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,42 +37,10 @@ namespace FeatureSwitches.Test.IntegrationTest
         }
 
         [TestMethod]
-        public async Task On_off_override()
-        {
-            var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA");
-            featureDatabase.SetFeatureGroup("FeatureA");
-            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", new ScalarValueSetting<bool>(true));
-
-            featureDatabase.SetFeature("FeatureB");
-            featureDatabase.SetFeatureGroup("FeatureB");
-            featureDatabase.SetFeatureFilter("FeatureB", "OnOff", new ScalarValueSetting<bool>(false));
-
-            var featureService = this.sp.GetRequiredService<FeatureService>();
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
-            Assert.IsFalse(await featureService.IsEnabled("FeatureB"));
-        }
-
-        [TestMethod]
-        public async Task On_off_filter()
-        {
-            var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA");
-            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(true), group: null);
-
-            featureDatabase.SetFeature("FeatureB");
-
-            var featureService = this.sp.GetRequiredService<FeatureService>();
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
-            Assert.IsFalse(await featureService.IsEnabled("FeatureB"));
-        }
-
-        [TestMethod]
         public async Task Customer_filter_with_thread_identity()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", offValue: false);
-            featureDatabase.SetFeatureGroup("FeatureA", true);
+            featureDatabase.SetFeature("FeatureA", isOn: true, offValue: false, onValue: true);
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } });
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
@@ -87,8 +56,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Speed_single_scope()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", offValue: false);
-            featureDatabase.SetFeatureGroup("FeatureA", null, true);
+            featureDatabase.SetFeature("FeatureA", offValue: false, isOn: true);
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } });
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
@@ -103,8 +71,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Speed_multi_scope()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", offValue: false);
-            featureDatabase.SetFeatureGroup("FeatureA", null, true);
+            featureDatabase.SetFeature("FeatureA", offValue: false, isOn: true);
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } });
 
             SetCurrentCustomer("A");
@@ -139,7 +106,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
             featureDatabase.SetFeature("Egg", offValue: true);
             var featureService = this.sp.GetRequiredService<FeatureService>();
-            Assert.IsNull(await featureService.GetValue<TestVariation>("Egg"));
+            await Assert.ThrowsExceptionAsync<JsonException>(() => featureService.GetValue<TestVariation>("Egg"));
             Assert.IsTrue(await featureService.IsEnabled("Egg"));
         }
 
@@ -167,13 +134,11 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Groups()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", offValue: false);
-            featureDatabase.SetFeatureGroup("FeatureA", null, true);
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", true);
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", true);
+            featureDatabase.SetFeature("FeatureA", isOn: true, offValue: false);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", isOn: false, onValue: true);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", isOn: true, onValue: true);
 
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } }, "GroupA");
-            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", "{ \"Setting\": false }", "GroupA");
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "B" } }, "GroupB");
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
@@ -189,13 +154,11 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Customer_filter_with_scoped_customer()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA", offValue: false);
-            featureDatabase.SetFeatureGroup("FeatureA", null, true);
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", true);
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", true);
+            featureDatabase.SetFeature("FeatureA", isOn: true, offValue: false);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", isOn: false, onValue: true);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", isOn: true, onValue: true);
 
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\", \"C\"] }", "GroupA");
-            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", "{ \"Setting\": false }", "GroupA");
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
 
             using (var scope = this.sp.CreateScope())
@@ -225,6 +188,8 @@ namespace FeatureSwitches.Test.IntegrationTest
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
             featureDatabase.SetFeature("FeatureA");
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", isOn: false);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", isOn: false);
 
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\", \"C\"] }", "GroupA");
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
@@ -244,8 +209,8 @@ namespace FeatureSwitches.Test.IntegrationTest
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
 
             featureDatabase.SetFeature("FeatureA", offValue: MultiSwitch.Off, onValue: MultiSwitch.On);
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", MultiSwitch.Halfway);
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", MultiSwitch.On);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", onValue: MultiSwitch.Halfway);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", onValue: MultiSwitch.On);
 
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }", "GroupA");
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
@@ -269,10 +234,10 @@ namespace FeatureSwitches.Test.IntegrationTest
             var halfWayVariation = new TestVariation { Color = Color.Gray };
             featureDatabase.SetFeature("FeatureA", offValue: offVariation, onValue: defaultOnVariation);
 
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", halfWayVariation);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", onValue: halfWayVariation);
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }", "GroupA");
 
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", defaultOnVariation);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", onValue: defaultOnVariation);
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
@@ -288,11 +253,41 @@ namespace FeatureSwitches.Test.IntegrationTest
         }
 
         [TestMethod]
+        public async Task Variations_structs()
+        {
+            var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
+
+            var offVariation = new StructVariation { Name = "Off" };
+            var defaultOnVariation = new StructVariation { Name = "On" };
+            var halfWayVariation = new StructVariation { Name = "Halfway" };
+            featureDatabase.SetFeature("FeatureA", offValue: offVariation, onValue: defaultOnVariation);
+
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", onValue: halfWayVariation);
+            featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }", "GroupA");
+
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", onValue: defaultOnVariation);
+            featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
+
+            var featureService = this.sp.GetRequiredService<FeatureService>();
+            SetCurrentCustomer("A");
+            var variation = await featureService.GetValue<StructVariation>("FeatureA");
+            Assert.AreEqual(halfWayVariation, variation);
+            SetCurrentCustomer("B");
+            variation = await featureService.GetValue<StructVariation>("FeatureA");
+            Assert.AreEqual(defaultOnVariation, variation);
+            SetCurrentCustomer("C");
+            variation = await featureService.GetValue<StructVariation>("FeatureA");
+            Assert.AreEqual(offVariation, variation);
+
+            variation = await featureService.GetValue<StructVariation, StructVariation>("FeatureA", halfWayVariation);
+            Assert.AreEqual(offVariation, variation);
+        }
+
+        [TestMethod]
         public async Task Update_feature_filter()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA");
-            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(true), group: null);
+            featureDatabase.SetFeature("FeatureA", isOn: true);
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [] }");
 
             using (var scope = this.sp.CreateScope())
@@ -316,9 +311,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Parallel_change()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("FeatureA");
-            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(false), group: null);
-
+            featureDatabase.SetFeature("FeatureA", isOn: false);
             featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"Setting\": \"Expanded\" }");
 
             using (var scope = this.sp.CreateScope())
@@ -331,7 +324,7 @@ namespace FeatureSwitches.Test.IntegrationTest
                 Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
             }
 
-            featureDatabase.SetFeatureFilter("FeatureA", "OnOff", config: new ScalarValueSetting<bool>(true), group: null);
+            featureDatabase.SetFeature("FeatureA", isOn: true);
 
             using (var scope = this.sp.CreateScope())
             {
@@ -383,6 +376,11 @@ namespace FeatureSwitches.Test.IntegrationTest
         private static void SetCurrentCustomer(string name)
         {
             Thread.CurrentPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.Name, name) }));
+        }
+
+        private struct StructVariation
+        {
+            public string Name { get; set; }
         }
 
         private class TestVariation

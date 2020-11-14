@@ -8,6 +8,6 @@
         public byte[] Config { get; set; } = null!;
 #pragma warning restore CA1819 // Properties should not return arrays
 
-        public FeatureFilterGroupDefinition Group { get; set; } = null!;
+        public FeatureFilterGroupDefinition? Group { get; set; }
     }
 }

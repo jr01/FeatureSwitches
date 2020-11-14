@@ -11,7 +11,6 @@ namespace FeatureSwitches
     {
         public static void AddFeatureSwitches(this IServiceCollection serviceCollection, bool addScopedCache = false)
         {
-            serviceCollection.AddSingleton<IFeatureFilterMetadata, OnOffFeatureFilter>();
             serviceCollection.AddSingleton<IFeatureFilterMetadata, ParallelChangeFeatureFilter>();
             serviceCollection.AddScoped<IFeatureFilterMetadata, SessionFeatureFilter>();
             serviceCollection.AddScoped<SessionFeatureContext>();

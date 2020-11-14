@@ -45,25 +45,23 @@ namespace FeatureSwitches
         public Task<TFeatureType> GetValue<TFeatureType>(string feature, CancellationToken cancellationToken = default) =>
             this.GetValue<TFeatureType, object>(feature, null!, cancellationToken);
 
+        // ToDo: C# 9 generic nullable TEvaluationContext.
         public async Task<TFeatureType> GetValue<TFeatureType, TEvaluationContext>(
             string feature,
             TEvaluationContext evaluationContext,
             CancellationToken cancellationToken = default)
         {
-            var rawValue = await this.GetRawValue<TEvaluationContext>(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
-            try
+            var rawValue = await this.GetRawValue(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
+            if (rawValue == null)
             {
-                return JsonSerializer.Deserialize<TFeatureType>(rawValue);
-            }
-            catch (JsonException)
-            {
+                return default!;
             }
 
-            return default!;
+            return JsonSerializer.Deserialize<TFeatureType>(rawValue);
         }
 
         public Task<byte[]?> GetRawValue(string feature, CancellationToken cancellationToken = default) =>
-            this.GetRawValue(feature, cancellationToken);
+            this.GetRawValue<object>(feature, null!, cancellationToken);
 
         public async Task<byte[]?> GetRawValue<TEvaluationContext>(
             string feature,
@@ -101,7 +99,11 @@ namespace FeatureSwitches
             return this.featureDefinitionProvider.GetFeatures(cancellationToken);
         }
 
-        private static Task<bool> EvaluateFilter<TEvaluationContext>(IFeatureFilterMetadata filter, FeatureFilterEvaluationContext context, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default)
+        private static Task<bool> EvaluateFilter<TEvaluationContext>(
+            IFeatureFilterMetadata filter,
+            FeatureFilterEvaluationContext context,
+            TEvaluationContext evaluationContext,
+            CancellationToken cancellationToken = default)
         {
             if (filter is IFeatureFilter featureFilter)
             {
@@ -118,10 +120,6 @@ namespace FeatureSwitches
 
         private string GetCacheContext<TEvaluationContext>(TEvaluationContext evaluationContext)
         {
-            // ToDo: should this featureContextProvider really be here? Or should this
-            //       be left upto a specific Cache implementation?
-            //       It could even depend on a filter? If there is no 'customerfilter'
-            //       attached to a feature then it can be cached regardless of customer.
             var exec = this.featureContextProvider.GetContext();
             if (exec == null && evaluationContext == null)
             {
@@ -158,8 +156,12 @@ namespace FeatureSwitches
             }
 
             evalutionResult.SerializedSwitchValue = featureDefinition.OffValue;
+            if (!featureDefinition.IsOn)
+            {
+                return evalutionResult;
+            }
 
-            var filterGroups = featureDefinition.FeatureFilters.GroupBy(x => x.Group.Name);
+            var filterGroups = featureDefinition.FeatureFilters.GroupBy(x => x.Group?.Name);
             foreach (var filterGrouping in filterGroups)
             {
                 // Filtergroups are OR'ed, except for the null group.
@@ -167,13 +169,21 @@ namespace FeatureSwitches
                 var groupEnabled = true;
                 foreach (var featureFilterDefinition in filterGrouping)
                 {
+                    if (featureFilterDefinition.Group != null && !featureFilterDefinition.Group.IsOn)
+                    {
+                        groupEnabled = false;
+                        break;
+                    }
+
                     var filter = this.GetFeatureFilter(featureFilterDefinition);
 
                     var context = new FeatureFilterEvaluationContext(feature, featureFilterDefinition.Config);
                     var isEnabled = await EvaluateFilter(filter, context, evaluationContext, cancellationToken).ConfigureAwait(false);
                     if (isEnabled)
                     {
-                        evalutionResult.SerializedSwitchValue = featureFilterDefinition.Group.OnValue;
+                        evalutionResult.SerializedSwitchValue = featureFilterDefinition.Group != null ?
+                            featureFilterDefinition.Group.OnValue :
+                            featureDefinition.OnValue;
                     }
                     else
                     {
