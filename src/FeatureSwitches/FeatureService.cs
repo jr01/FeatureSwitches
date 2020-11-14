@@ -154,15 +154,18 @@ namespace FeatureSwitches
                 return evalutionResult;
             }
 
-            var filterGroups = featureDefinition.FeatureFilters.GroupBy(x => x.Group?.Name);
+            var filterGroups = featureDefinition.Filters.GroupBy(x => x.Group);
             foreach (var filterGrouping in filterGroups)
             {
                 // Filtergroups are OR'ed, except for the null group.
                 // All filters within 1 group are AND'ed.
+                var group = filterGrouping.Key is null ? null :
+                    featureDefinition.FilterGroups.FirstOrDefault(x => x.Name == filterGrouping.Key);
+
                 var groupIsOn = true;
                 foreach (var featureFilterDefinition in filterGrouping)
                 {
-                    if (featureFilterDefinition.Group is not null && !featureFilterDefinition.Group.IsOn)
+                    if (group is not null && !group.IsOn)
                     {
                         groupIsOn = false;
                         break;
@@ -174,9 +177,9 @@ namespace FeatureSwitches
                     var isOn = await EvaluateFilter(filter, context, evaluationContext, cancellationToken).ConfigureAwait(false);
                     if (isOn)
                     {
-                        evalutionResult.SerializedSwitchValue = featureFilterDefinition.Group is not null ?
-                            featureFilterDefinition.Group.OnValue :
-                            featureDefinition.OnValue;
+                        evalutionResult.SerializedSwitchValue = group is null ?
+                            featureDefinition.OnValue :
+                            group.OnValue;
                     }
                     else
                     {

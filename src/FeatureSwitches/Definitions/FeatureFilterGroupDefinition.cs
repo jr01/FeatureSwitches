@@ -2,7 +2,10 @@
 {
     public class FeatureFilterGroupDefinition
     {
-        public string? Name { get; set; }
+        /// <summary>
+        /// Gets or sets the name of the group.
+        /// </summary>
+        public string Name { get; set; } = default!;
 
         /// <summary>
         /// Gets or sets a value indicating whether gets or sets whether the group is on.

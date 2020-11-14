@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,8 +11,6 @@ namespace FeatureSwitches.Definitions
     public class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvider
     {
         private readonly Dictionary<string, FeatureDefinition> featureSwitches = new ();
-        private readonly Dictionary<string, FeatureFilterGroupDefinition> featureFilterGroups = new ();
-        private readonly ConcurrentDictionary<string, FeatureDefinition?> filterDefinitionCache = new ();
 
         public Task<string[]> GetFeatures(CancellationToken cancellationToken = default)
         {
@@ -23,12 +20,8 @@ namespace FeatureSwitches.Definitions
 
         public Task<FeatureDefinition?> GetFeatureDefinition(string feature, CancellationToken cancellationToken = default)
         {
-            var definition = this.filterDefinitionCache.GetOrAdd(feature, x =>
-            {
-                return this.GetFeatureDefinitionInternal(feature);
-            });
-
-            return Task.FromResult(definition);
+            this.featureSwitches.TryGetValue(feature, out var definition);
+            return Task.FromResult<FeatureDefinition?>(definition);
         }
 
         /// <summary>
@@ -45,7 +38,7 @@ namespace FeatureSwitches.Definitions
                 throw new InvalidOperationException($"Feature {feature} must be defined first.");
             }
 
-            var filter = definition.FeatureFilters.FirstOrDefault(x => x.Type == featureFilterName && x.Group?.Name == group);
+            var filter = definition.Filters.FirstOrDefault(x => x.Type == featureFilterName && x.Group == group);
             if (filter is null)
             {
                 filter = new FeatureFilterDefinition
@@ -53,21 +46,16 @@ namespace FeatureSwitches.Definitions
                     Type = featureFilterName,
                 };
 
-                definition.FeatureFilters.Add(filter);
+                definition.Filters.Add(filter);
             }
 
-            if (group is null)
+            filter.Group = group;
+            if (filter.Group is not null)
             {
-                filter.Group = null;
-            }
-            else
-            {
-                if (!this.featureFilterGroups.TryGetValue($"{feature}\n{group}", out var groupDefinition))
+                if (!definition.FilterGroups.Any(g => g.Name == group))
                 {
                     throw new InvalidOperationException($"Feature group {group} must be defined first for feature {feature}");
                 }
-
-                filter.Group = groupDefinition;
             }
 
             if (config is string stringConfig)
@@ -78,8 +66,6 @@ namespace FeatureSwitches.Definitions
             {
                 filter.Config = JsonSerializer.SerializeToUtf8Bytes(config);
             }
-
-            this.InvalidateCache(feature);
         }
 
         /// <summary>
@@ -109,8 +95,6 @@ namespace FeatureSwitches.Definitions
             definition.OffValue = JsonSerializer.SerializeToUtf8Bytes(offValue);
             definition.OnValue = JsonSerializer.SerializeToUtf8Bytes(onValue);
             definition.IsOn = isOn;
-
-            this.InvalidateCache(feature);
         }
 
         /// <summary>
@@ -132,34 +116,23 @@ namespace FeatureSwitches.Definitions
         /// <param name="onValue">The value to return when the feature is on and the group matches.</param>
         public void SetFeatureGroup<TFeatureType>(string feature, string group, bool isOn = true, TFeatureType onValue = default)
         {
-            if (!this.featureSwitches.ContainsKey(feature))
+            if (!this.featureSwitches.TryGetValue(feature, out var definition))
             {
                 throw new InvalidOperationException($"Feature {feature} must be defined first.");
             }
 
-            this.featureFilterGroups[$"{feature}\n{group}"] = new FeatureFilterGroupDefinition
+            var featureFilterGroup = definition.FilterGroups.FirstOrDefault(x => x.Name == group);
+            if (featureFilterGroup is null)
             {
-                OnValue = JsonSerializer.SerializeToUtf8Bytes(onValue),
-                IsOn = isOn,
-                Name = group
-            };
-
-            this.InvalidateCache(feature);
-        }
-
-        private FeatureDefinition? GetFeatureDefinitionInternal(string feature)
-        {
-            if (!this.featureSwitches.TryGetValue(feature, out var definition))
-            {
-                return null;
+                featureFilterGroup = new ()
+                {
+                    Name = group
+                };
+                definition.FilterGroups.Add(featureFilterGroup);
             }
 
-            return definition;
-        }
-
-        private void InvalidateCache(string feature)
-        {
-            this.filterDefinitionCache.TryRemove(feature, out _);
+            featureFilterGroup.OnValue = JsonSerializer.SerializeToUtf8Bytes(onValue);
+            featureFilterGroup.IsOn = isOn;
         }
     }
 }
