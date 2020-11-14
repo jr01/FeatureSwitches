@@ -243,13 +243,13 @@ namespace FeatureSwitches.Test.IntegrationTest
             var featureService = this.sp.GetRequiredService<FeatureService>();
             SetCurrentCustomer("A");
             var variation = await featureService.GetValue<TestVariation>("FeatureA");
-            Assert.AreEqual(Color.Gray, variation.Color);
+            Assert.AreEqual(Color.Gray, variation?.Color);
             SetCurrentCustomer("B");
             variation = await featureService.GetValue<TestVariation>("FeatureA");
-            Assert.AreEqual(Color.White, variation.Color);
+            Assert.AreEqual(Color.White, variation?.Color);
             SetCurrentCustomer("C");
             variation = await featureService.GetValue<TestVariation>("FeatureA");
-            Assert.AreEqual(Color.Black, variation.Color);
+            Assert.AreEqual(Color.Black, variation?.Color);
         }
 
         [TestMethod]

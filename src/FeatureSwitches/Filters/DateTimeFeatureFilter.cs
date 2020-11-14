@@ -25,6 +25,10 @@ namespace FeatureSwitches.Filters
             var now = this.dateTimeResolver();
 
             var settings = context.GetSettings<DateTimeFeatureFilterSettings>();
+            if (settings is null)
+            {
+                throw new InvalidOperationException("Invalid settings.");
+            }
 
             var isEnabled = true;
             if (settings.From.HasValue && now < settings.From)

@@ -12,15 +12,9 @@ namespace FeatureSwitches.Definitions
 {
     public class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvider
     {
-        private readonly Dictionary<string, FeatureDefinition> featureSwitches =
-            new Dictionary<string, FeatureDefinition>();
-
-        private readonly Dictionary<string, FeatureFilterGroupDefinition> featureFilterGroups =
-            new Dictionary<string, FeatureFilterGroupDefinition>();
-
-        private readonly ConcurrentDictionary<string, FeatureDefinition?> filterDefinitionCache =
-            new ConcurrentDictionary<string, FeatureDefinition?>();
-
+        private readonly Dictionary<string, FeatureDefinition> featureSwitches = new ();
+        private readonly Dictionary<string, FeatureFilterGroupDefinition> featureFilterGroups = new ();
+        private readonly ConcurrentDictionary<string, FeatureDefinition?> filterDefinitionCache = new ();
         private readonly IEnumerable<IFeatureCache> featureEvaluationCaches;
 
         public InMemoryFeatureDefinitionProvider(IEnumerable<IFeatureCache> featureEvaluationCaches)
@@ -59,7 +53,7 @@ namespace FeatureSwitches.Definitions
             }
 
             var filter = definition.FeatureFilters.FirstOrDefault(x => x.Type == featureFilterName && x.Group?.Name == group);
-            if (filter == null)
+            if (filter is null)
             {
                 filter = new FeatureFilterDefinition
                 {
@@ -69,7 +63,7 @@ namespace FeatureSwitches.Definitions
                 definition.FeatureFilters.Add(filter);
             }
 
-            if (group == null)
+            if (group is null)
             {
                 filter.Group = null;
             }
@@ -115,7 +109,7 @@ namespace FeatureSwitches.Definitions
         {
             if (!this.featureSwitches.TryGetValue(feature, out var definition))
             {
-                definition = new FeatureDefinition();
+                definition = new ();
                 this.featureSwitches.Add(feature, definition);
             }
 

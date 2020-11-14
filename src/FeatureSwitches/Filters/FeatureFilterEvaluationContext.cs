@@ -14,7 +14,7 @@ namespace FeatureSwitches.Filters
 
         public string Feature { get; }
 
-        public T GetSettings<T>()
+        public T? GetSettings<T>()
         {
             return JsonSerializer.Deserialize<T>(this.settings);
         }

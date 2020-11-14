@@ -8,9 +8,7 @@ namespace FeatureSwitches.Caching
 {
     public sealed class InMemoryFeatureCache : IFeatureCache
     {
-        private readonly ConcurrentDictionary<string, CacheValue> cache =
-            new ConcurrentDictionary<string, CacheValue>();
-
+        private readonly ConcurrentDictionary<string, CacheValue> cache = new ();
         private readonly Func<DateTimeOffset> timeResolver;
 
         public InMemoryFeatureCache()

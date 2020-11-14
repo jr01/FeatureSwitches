@@ -16,7 +16,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         public object? GetContext()
         {
             var name = this.currentCustomer.Name;
-            if (name == null)
+            if (name is null)
             {
                 var identity = Thread.CurrentPrincipal?.Identity as ClaimsIdentity;
                 name = identity?.Name;

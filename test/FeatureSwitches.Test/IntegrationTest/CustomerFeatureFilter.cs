@@ -21,7 +21,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             var settings = context.GetSettings<CustomerFeatureFilterSettings>();
 
             var name = this.currentCustomer.Name ?? GetCurrentCustomer();
-            if (name == null)
+            if (name is null)
             {
                 return Task.FromResult(false);
             }
