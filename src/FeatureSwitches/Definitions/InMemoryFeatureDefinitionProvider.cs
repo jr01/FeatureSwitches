@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using FeatureSwitches.Caching;
 
 namespace FeatureSwitches.Definitions
 {
@@ -15,12 +14,6 @@ namespace FeatureSwitches.Definitions
         private readonly Dictionary<string, FeatureDefinition> featureSwitches = new ();
         private readonly Dictionary<string, FeatureFilterGroupDefinition> featureFilterGroups = new ();
         private readonly ConcurrentDictionary<string, FeatureDefinition?> filterDefinitionCache = new ();
-        private readonly IEnumerable<IFeatureCache> featureEvaluationCaches;
-
-        public InMemoryFeatureDefinitionProvider(IEnumerable<IFeatureCache> featureEvaluationCaches)
-        {
-            this.featureEvaluationCaches = featureEvaluationCaches;
-        }
 
         public Task<string[]> GetFeatures(CancellationToken cancellationToken = default)
         {
@@ -86,7 +79,7 @@ namespace FeatureSwitches.Definitions
                 filter.Config = JsonSerializer.SerializeToUtf8Bytes(config);
             }
 
-            this.Reload(feature);
+            this.InvalidateCache(feature);
         }
 
         /// <summary>
@@ -117,7 +110,7 @@ namespace FeatureSwitches.Definitions
             definition.OnValue = JsonSerializer.SerializeToUtf8Bytes(onValue);
             definition.IsOn = isOn;
 
-            this.Reload(feature);
+            this.InvalidateCache(feature);
         }
 
         /// <summary>
@@ -151,7 +144,7 @@ namespace FeatureSwitches.Definitions
                 Name = group
             };
 
-            this.Reload(feature);
+            this.InvalidateCache(feature);
         }
 
         private FeatureDefinition? GetFeatureDefinitionInternal(string feature)
@@ -164,14 +157,9 @@ namespace FeatureSwitches.Definitions
             return definition;
         }
 
-        private void Reload(string feature)
+        private void InvalidateCache(string feature)
         {
             this.filterDefinitionCache.TryRemove(feature, out _);
-
-            foreach (var cache in this.featureEvaluationCaches)
-            {
-                cache.Remove(feature).GetAwaiter().GetResult();
-            }
         }
     }
 }
