@@ -35,10 +35,10 @@ namespace FeatureSwitches
             this.featureContextProvider = featureContextProvider;
         }
 
-        public Task<bool> IsEnabled(string feature, CancellationToken cancellationToken = default) =>
+        public Task<bool> IsOn(string feature, CancellationToken cancellationToken = default) =>
             this.GetValue<bool>(feature, cancellationToken);
 
-        public Task<bool> IsEnabled<TEvaluationContext>(string feature, TEvaluationContext? evaluationContext, CancellationToken cancellationToken = default) =>
+        public Task<bool> IsOn<TEvaluationContext>(string feature, TEvaluationContext? evaluationContext, CancellationToken cancellationToken = default) =>
             this.GetValue<bool, TEvaluationContext>(feature, evaluationContext, cancellationToken);
 
         public Task<TFeatureType?> GetValue<TFeatureType>(string feature, CancellationToken cancellationToken = default) =>
@@ -78,7 +78,7 @@ namespace FeatureSwitches
 
             byte[]? switchValue = default!;
             var evaluationResult = await this.GetSerializedSwitchValue(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
-            if (evaluationResult.IsEnabled)
+            if (evaluationResult.IsOn)
             {
                 switchValue = evaluationResult.SerializedSwitchValue;
             }
@@ -105,8 +105,8 @@ namespace FeatureSwitches
         {
             return filter switch
             {
-                IFeatureFilter featureFilter => featureFilter.IsEnabled(context, cancellationToken),
-                IContextualFeatureFilter contextualFeatureFilter => contextualFeatureFilter.IsEnabled(context, evaluationContext, cancellationToken),
+                IFeatureFilter featureFilter => featureFilter.IsOn(context, cancellationToken),
+                IContextualFeatureFilter contextualFeatureFilter => contextualFeatureFilter.IsOn(context, evaluationContext, cancellationToken),
                 _ => Task.FromResult(false)
             };
         }
@@ -139,7 +139,7 @@ namespace FeatureSwitches
         {
             EvaluationResult evalutionResult = new ()
             {
-                IsEnabled = false
+                IsOn = false
             };
 
             var featureDefinition = await this.featureDefinitionProvider.GetFeatureDefinition(feature, cancellationToken).ConfigureAwait(false);
@@ -159,20 +159,20 @@ namespace FeatureSwitches
             {
                 // Filtergroups are OR'ed, except for the null group.
                 // All filters within 1 group are AND'ed.
-                var groupEnabled = true;
+                var groupIsOn = true;
                 foreach (var featureFilterDefinition in filterGrouping)
                 {
                     if (featureFilterDefinition.Group is not null && !featureFilterDefinition.Group.IsOn)
                     {
-                        groupEnabled = false;
+                        groupIsOn = false;
                         break;
                     }
 
                     var filter = this.GetFeatureFilter(featureFilterDefinition);
 
                     FeatureFilterEvaluationContext context = new (feature, featureFilterDefinition.Config);
-                    var isEnabled = await EvaluateFilter(filter, context, evaluationContext, cancellationToken).ConfigureAwait(false);
-                    if (isEnabled)
+                    var isOn = await EvaluateFilter(filter, context, evaluationContext, cancellationToken).ConfigureAwait(false);
+                    if (isOn)
                     {
                         evalutionResult.SerializedSwitchValue = featureFilterDefinition.Group is not null ?
                             featureFilterDefinition.Group.OnValue :
@@ -181,20 +181,20 @@ namespace FeatureSwitches
                     else
                     {
                         evalutionResult.SerializedSwitchValue = featureDefinition.OffValue;
-                        groupEnabled = false;
+                        groupIsOn = false;
                         break;
                     }
                 }
 
-                if ((groupEnabled && filterGrouping.Key is not null) ||
-                    (!groupEnabled && filterGrouping.Key is null))
+                if ((groupIsOn && filterGrouping.Key is not null) ||
+                    (!groupIsOn && filterGrouping.Key is null))
                 {
                     // null group is always AND'ed
                     break;
                 }
             }
 
-            evalutionResult.IsEnabled = true;
+            evalutionResult.IsOn = true;
             return evalutionResult;
         }
 
@@ -209,7 +209,7 @@ namespace FeatureSwitches
 
         private class EvaluationResult
         {
-            public bool IsEnabled { get; set; }
+            public bool IsOn { get; set; }
 
             public byte[] SerializedSwitchValue { get; set; } = null!;
         }

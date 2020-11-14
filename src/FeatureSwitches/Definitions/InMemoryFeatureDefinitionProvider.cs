@@ -69,7 +69,7 @@ namespace FeatureSwitches.Definitions
             }
             else
             {
-                if (!this.featureFilterGroups.TryGetValue(feature + "." + group, out var groupDefinition))
+                if (!this.featureFilterGroups.TryGetValue($"{feature}\n{group}", out var groupDefinition))
                 {
                     throw new InvalidOperationException($"Feature group {group} must be defined first for feature {feature}");
                 }
@@ -144,7 +144,7 @@ namespace FeatureSwitches.Definitions
                 throw new InvalidOperationException($"Feature {feature} must be defined first.");
             }
 
-            this.featureFilterGroups[feature + "." + group] = new FeatureFilterGroupDefinition
+            this.featureFilterGroups[$"{feature}\n{group}"] = new FeatureFilterGroupDefinition
             {
                 OnValue = JsonSerializer.SerializeToUtf8Bytes(onValue),
                 IsOn = isOn,

@@ -20,7 +20,7 @@ namespace FeatureSwitches.Filters
 
         public string Name => "DateTime";
 
-        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
+        public Task<bool> IsOn(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
         {
             var now = this.dateTimeResolver();
 
@@ -30,18 +30,18 @@ namespace FeatureSwitches.Filters
                 throw new InvalidOperationException("Invalid settings.");
             }
 
-            var isEnabled = true;
+            var isOn = true;
             if (settings.From.HasValue && now < settings.From)
             {
-                isEnabled = false;
+                isOn = false;
             }
 
             if (settings.To.HasValue && now > settings.To)
             {
-                isEnabled = false;
+                isOn = false;
             }
 
-            return Task.FromResult(isEnabled);
+            return Task.FromResult(isOn);
         }
     }
 }

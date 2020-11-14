@@ -45,11 +45,11 @@ namespace FeatureSwitches.Test.IntegrationTest
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
             SetCurrentCustomer("A");
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
+            Assert.IsTrue(await featureService.IsOn("FeatureA"));
             SetCurrentCustomer("B");
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+            Assert.IsFalse(await featureService.IsOn("FeatureA"));
             SetCurrentCustomer("C");
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
+            Assert.IsTrue(await featureService.IsOn("FeatureA"));
         }
 
         [TestMethod]
@@ -63,7 +63,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             SetCurrentCustomer("A");
             for (var i = 0; i < 10000; i++)
             {
-                await featureService.IsEnabled("FeatureA");
+                await featureService.IsOn("FeatureA");
             }
         }
 
@@ -79,7 +79,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             {
                 using var scope = this.sp.CreateScope();
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
-                await featureService.IsEnabled("FeatureA");
+                await featureService.IsOn("FeatureA");
             }
         }
 
@@ -96,7 +96,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             var featureService = this.sp.GetRequiredService<FeatureService>();
             foreach (var feature in await featureService.GetFeatures())
             {
-                await featureService.IsEnabled(feature);
+                await featureService.IsOn(feature);
             }
         }
 
@@ -107,14 +107,14 @@ namespace FeatureSwitches.Test.IntegrationTest
             featureDatabase.SetFeature("Egg", offValue: true);
             var featureService = this.sp.GetRequiredService<FeatureService>();
             await Assert.ThrowsExceptionAsync<JsonException>(() => featureService.GetValue<TestVariation>("Egg"));
-            Assert.IsTrue(await featureService.IsEnabled("Egg"));
+            Assert.IsTrue(await featureService.IsOn("Egg"));
         }
 
         [TestMethod]
         public async Task Feature_not_defined()
         {
             var featureService = this.sp.GetRequiredService<FeatureService>();
-            Assert.IsFalse(await featureService.IsEnabled("Chicken"));
+            Assert.IsFalse(await featureService.IsOn("Chicken"));
             Assert.IsFalse(await featureService.GetValue<bool>("Chicken"));
             Assert.IsNull(await featureService.GetValue<TestVariation>("Chicken"));
         }
@@ -127,7 +127,7 @@ namespace FeatureSwitches.Test.IntegrationTest
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
 
-            Assert.IsFalse(await featureService.IsEnabled("Egg"));
+            Assert.IsFalse(await featureService.IsOn("Egg"));
         }
 
         [TestMethod]
@@ -143,11 +143,11 @@ namespace FeatureSwitches.Test.IntegrationTest
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
             SetCurrentCustomer("A");
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+            Assert.IsFalse(await featureService.IsOn("FeatureA"));
             SetCurrentCustomer("B");
-            Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
+            Assert.IsTrue(await featureService.IsOn("FeatureA"));
             SetCurrentCustomer("C");
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+            Assert.IsFalse(await featureService.IsOn("FeatureA"));
         }
 
         [TestMethod]
@@ -165,21 +165,21 @@ namespace FeatureSwitches.Test.IntegrationTest
             {
                 scope.ServiceProvider.GetRequiredService<CurrentCustomer>().Name = "A";
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+                Assert.IsFalse(await featureService.IsOn("FeatureA"));
             }
 
             using (var scope = this.sp.CreateScope())
             {
                 scope.ServiceProvider.GetRequiredService<CurrentCustomer>().Name = "B";
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
+                Assert.IsTrue(await featureService.IsOn("FeatureA"));
             }
 
             using (var scope = this.sp.CreateScope())
             {
                 scope.ServiceProvider.GetRequiredService<CurrentCustomer>().Name = "C";
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+                Assert.IsFalse(await featureService.IsOn("FeatureA"));
             }
         }
 
@@ -196,11 +196,11 @@ namespace FeatureSwitches.Test.IntegrationTest
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
             SetCurrentCustomer("A");
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+            Assert.IsFalse(await featureService.IsOn("FeatureA"));
             SetCurrentCustomer("B");
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+            Assert.IsFalse(await featureService.IsOn("FeatureA"));
             SetCurrentCustomer("C");
-            Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+            Assert.IsFalse(await featureService.IsOn("FeatureA"));
         }
 
         [TestMethod]
@@ -294,7 +294,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             {
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
                 scope.ServiceProvider.GetRequiredService<CurrentCustomer>().Name = "A";
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
+                Assert.IsFalse(await featureService.IsOn("FeatureA"));
             }
 
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }");
@@ -303,7 +303,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             {
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
                 scope.ServiceProvider.GetRequiredService<CurrentCustomer>().Name = "A";
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
+                Assert.IsTrue(await featureService.IsOn("FeatureA"));
             }
         }
 
@@ -318,10 +318,10 @@ namespace FeatureSwitches.Test.IntegrationTest
             {
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
 
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+                Assert.IsFalse(await featureService.IsOn("FeatureA"));
+                Assert.IsFalse(await featureService.IsOn("FeatureA", ParallelChange.Expanded));
+                Assert.IsFalse(await featureService.IsOn("FeatureA", ParallelChange.Migrated));
+                Assert.IsFalse(await featureService.IsOn("FeatureA", ParallelChange.Contracted));
             }
 
             featureDatabase.SetFeature("FeatureA", isOn: true);
@@ -330,10 +330,10 @@ namespace FeatureSwitches.Test.IntegrationTest
             {
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
 
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA"));
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+                Assert.IsFalse(await featureService.IsOn("FeatureA"));
+                Assert.IsTrue(await featureService.IsOn("FeatureA", ParallelChange.Expanded));
+                Assert.IsFalse(await featureService.IsOn("FeatureA", ParallelChange.Migrated));
+                Assert.IsFalse(await featureService.IsOn("FeatureA", ParallelChange.Contracted));
             }
 
             featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"Setting\": \"Migrated\" }");
@@ -341,10 +341,10 @@ namespace FeatureSwitches.Test.IntegrationTest
             using (var scope = this.sp.CreateScope())
             {
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
-                Assert.IsFalse(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+                Assert.IsTrue(await featureService.IsOn("FeatureA"));
+                Assert.IsTrue(await featureService.IsOn("FeatureA", ParallelChange.Expanded));
+                Assert.IsTrue(await featureService.IsOn("FeatureA", ParallelChange.Migrated));
+                Assert.IsFalse(await featureService.IsOn("FeatureA", ParallelChange.Contracted));
             }
 
             featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"Setting\": \"Contracted\" }");
@@ -352,10 +352,10 @@ namespace FeatureSwitches.Test.IntegrationTest
             using (var scope = this.sp.CreateScope())
             {
                 var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA"));
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Expanded));
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Migrated));
-                Assert.IsTrue(await featureService.IsEnabled("FeatureA", ParallelChange.Contracted));
+                Assert.IsTrue(await featureService.IsOn("FeatureA"));
+                Assert.IsTrue(await featureService.IsOn("FeatureA", ParallelChange.Expanded));
+                Assert.IsTrue(await featureService.IsOn("FeatureA", ParallelChange.Migrated));
+                Assert.IsTrue(await featureService.IsOn("FeatureA", ParallelChange.Contracted));
             }
         }
 

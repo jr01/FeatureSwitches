@@ -10,7 +10,7 @@ namespace FeatureSwitches.Filters
         /// </summary>
         /// <remarks>
         /// The default(ParallelChange) == Migrated, so when setting is set to Migrated
-        /// IsEnabled("feature") without the ParallelChange context returns true.</remarks>
+        /// isOn("feature") without the ParallelChange context returns true.</remarks>
         Migrated,
 
         /// <summary>

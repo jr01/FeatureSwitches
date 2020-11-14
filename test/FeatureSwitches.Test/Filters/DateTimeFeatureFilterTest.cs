@@ -21,11 +21,11 @@ namespace FeatureSwitches.Test.Filters
                 From = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture)
             });
 
-            Assert.IsFalse(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsFalse(await filter.IsOn(context).ConfigureAwait(false));
             now = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture);
-            Assert.IsTrue(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
             now = DateTimeOffset.Parse("2020-11-10", CultureInfo.InvariantCulture);
-            Assert.IsTrue(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
         }
 
         [TestMethod]
@@ -38,11 +38,11 @@ namespace FeatureSwitches.Test.Filters
                 To = DateTimeOffset.Parse("2020-11-10", CultureInfo.InvariantCulture)
             });
 
-            Assert.IsTrue(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
             now = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture);
-            Assert.IsTrue(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
             now = DateTimeOffset.Parse("2020-11-11", CultureInfo.InvariantCulture);
-            Assert.IsFalse(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsFalse(await filter.IsOn(context).ConfigureAwait(false));
         }
 
         [TestMethod]
@@ -56,13 +56,13 @@ namespace FeatureSwitches.Test.Filters
                 To = DateTimeOffset.Parse("2020-11-10", CultureInfo.InvariantCulture)
             });
 
-            Assert.IsFalse(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsFalse(await filter.IsOn(context).ConfigureAwait(false));
             now = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture);
-            Assert.IsTrue(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
             now = DateTimeOffset.Parse("2020-11-10", CultureInfo.InvariantCulture);
-            Assert.IsTrue(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
             now = DateTimeOffset.Parse("2020-11-11", CultureInfo.InvariantCulture);
-            Assert.IsFalse(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsFalse(await filter.IsOn(context).ConfigureAwait(false));
         }
 
         [TestMethod]
@@ -76,7 +76,7 @@ namespace FeatureSwitches.Test.Filters
                 To = null
             });
 
-            Assert.IsTrue(await filter.IsEnabled(context).ConfigureAwait(false));
+            Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
         }
 
         private static FeatureFilterEvaluationContext GetContext(DateTimeFeatureFilterSettings settings)

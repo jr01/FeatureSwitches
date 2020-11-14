@@ -15,21 +15,21 @@ namespace FeatureSwitches.Test.Filters
 
             var context = GetContext(ParallelChange.Expanded);
 
-            Assert.IsTrue(await filter.IsEnabled(context, ParallelChange.Expanded));
-            Assert.IsFalse(await filter.IsEnabled(context, ParallelChange.Migrated));
-            Assert.IsFalse(await filter.IsEnabled(context, ParallelChange.Contracted));
+            Assert.IsTrue(await filter.IsOn(context, ParallelChange.Expanded));
+            Assert.IsFalse(await filter.IsOn(context, ParallelChange.Migrated));
+            Assert.IsFalse(await filter.IsOn(context, ParallelChange.Contracted));
 
             context = GetContext(ParallelChange.Migrated);
 
-            Assert.IsTrue(await filter.IsEnabled(context, ParallelChange.Expanded));
-            Assert.IsTrue(await filter.IsEnabled(context, ParallelChange.Migrated));
-            Assert.IsFalse(await filter.IsEnabled(context, ParallelChange.Contracted));
+            Assert.IsTrue(await filter.IsOn(context, ParallelChange.Expanded));
+            Assert.IsTrue(await filter.IsOn(context, ParallelChange.Migrated));
+            Assert.IsFalse(await filter.IsOn(context, ParallelChange.Contracted));
 
             context = GetContext(ParallelChange.Contracted);
 
-            Assert.IsTrue(await filter.IsEnabled(context, ParallelChange.Expanded));
-            Assert.IsTrue(await filter.IsEnabled(context, ParallelChange.Migrated));
-            Assert.IsTrue(await filter.IsEnabled(context, ParallelChange.Contracted));
+            Assert.IsTrue(await filter.IsOn(context, ParallelChange.Expanded));
+            Assert.IsTrue(await filter.IsOn(context, ParallelChange.Migrated));
+            Assert.IsTrue(await filter.IsOn(context, ParallelChange.Contracted));
         }
 
         private static FeatureFilterEvaluationContext GetContext(ParallelChange parallelChange)

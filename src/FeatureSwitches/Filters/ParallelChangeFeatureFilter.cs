@@ -8,7 +8,7 @@ namespace FeatureSwitches.Filters
     {
         public override string Name => "ParallelChange";
 
-        public override Task<bool> IsEnabled(FeatureFilterEvaluationContext context, ParallelChange evaluationContext, CancellationToken cancellationToken = default)
+        public override Task<bool> IsOn(FeatureFilterEvaluationContext context, ParallelChange evaluationContext, CancellationToken cancellationToken = default)
         {
             var settings = context.GetSettings<ScalarValueSetting<ParallelChange>>();
             if (settings is null)
@@ -16,7 +16,7 @@ namespace FeatureSwitches.Filters
                 throw new InvalidOperationException("Invalid settings.");
             }
 
-            var isEnabled = settings.Setting switch
+            var isOn = settings.Setting switch
             {
                 ParallelChange.Expanded =>
                     evaluationContext == ParallelChange.Expanded,
@@ -30,7 +30,7 @@ namespace FeatureSwitches.Filters
                 _ => throw new InvalidOperationException(),
             };
 
-            return Task.FromResult(isEnabled);
+            return Task.FromResult(isOn);
         }
     }
 }

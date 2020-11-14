@@ -4,11 +4,11 @@ Switch application features on, off, or to any defined value.
 
 * Conditional feature switch support (boolean)
 ```C#
-     bool isEnabled = await featureService.IsEnabled("feature");
+     bool isOn = await featureService.IsOn("feature");
 ```
 * Any type can be switched to any value; for example to do A/B testing.
 ```C#
-    bool isEnabled = await featureService.GetValue<bool>("feature");
+    bool isOn = await featureService.GetValue<bool>("feature");
     var myTypedValue = await featureService.GetValue<MyType>("feature");
     if (myTypedValue.Setting == 'A')
         ...
@@ -16,7 +16,7 @@ Switch application features on, off, or to any defined value.
 * Feature filters and filter groups, allowing for complex rule evaluation.
 * Turn a feature on/off on feature and filter group level. (aka kill-switch)
 * Contextual feature evaluation.
-  * Via evaluation context parameter: `bool isEnabled = featureService.IsEnabled("feature", evaluationContext: "mycontext");`
+  * Via evaluation context parameter: `bool isOn = featureService.IsOn("feature", evaluationContext: "mycontext");`
   * Via evaluation context accessor. `serviceCollection.AddScoped<IEvaluationContextAccessor, MyEvaluationContextAccessor>()`
   * Both parameter and accessor can be combined together.
 * Out-of-the-box feature filters
@@ -71,7 +71,7 @@ serviceCollection.AddFeatureSwitches();
 
         public async Task Execute()
         {
-            if (await this.featureService.IsEnabled("MyBoolFeature"))
+            if (await this.featureService.IsOn("MyBoolFeature"))
             {
                 ...
             }
@@ -177,7 +177,7 @@ A feature is on when all applied feature filters decide that the feature should 
             this.appContext = appContext;
         }
 
-        public async Task<bool> IsEnabled(FeatureFilterEvaluationContext context)
+        public async Task<bool> IsOn(FeatureFilterEvaluationContext context)
         {
             var settings = context.GetSettings<MyUserFeatureFilterSettings>();
             return settings.AllowedNames.Contains(this.appContext.Name) ?? false;
@@ -196,7 +196,7 @@ A feature is on when all applied feature filters decide that the feature should 
     {
         scope.ServiceProvider.GetRequired<MyAppContext>().Name = "John";
         var featureService = scope.ServiceProvider.GetRequired<FeatureService>();
-        Assert.IsTrue(await featureService.IsEnabled("MyBoolFeature"));
+        Assert.IsTrue(await featureService.IsOn("MyBoolFeature"));
     }
     ```
 
@@ -261,7 +261,7 @@ public class MyUserFeatureFilter : ContextualFeatureFilter<MyAppContext>
 {
     public string Name => "User";
 
-    public async Task<bool> IsEnabled(FeatureFilterEvaluationContext context, MyAppContext appContext)
+    public async Task<bool> IsOn(FeatureFilterEvaluationContext context, MyAppContext appContext)
     {
         var settings = context.Parameters.Get<MyUserFeatureFilterSettings>();
         return settings?.AllowedNames.Contains(appContext.Name) ?? false;
@@ -273,7 +273,7 @@ featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
 featureDefinitionProvider.SetFeatureFilter("MyBoolFeature", "User", "{ \"allowedNames\": [\"John\", \"Jane\"] }");
 
 var featureService = serviceProvider.GetRequired<FeatureService>();
-Assert.IsTrue(await featureService.IsEnabled("MyBoolFeature", new MyAppContext { Name = "John" }));
+Assert.IsTrue(await featureService.IsOn("MyBoolFeature", new MyAppContext { Name = "John" }));
 ```
 
 
@@ -290,17 +290,17 @@ Out of the box the library ships with a ParallelChange contextual feature filter
 
 * When writing data
     ```C#
-    if (!await featureService.IsEnabled("feature", ParallelChange.Contracted)) {
+    if (!await featureService.IsOn("feature", ParallelChange.Contracted)) {
         Perform_Old_DataWrite();
     }
-    if (await featureService.IsEnabled("feature", ParallelChange.Expanded)) {
+    if (await featureService.IsOn("feature", ParallelChange.Expanded)) {
         Perform_New_DataWrite();
     }
     ```
 
 * When checking from UI if the feature can be used
     ```C#
-    if (await featureService.IsEnabled("feature", ParallelChange.Migrated)) {
+    if (await featureService.IsOn("feature", ParallelChange.Migrated)) {
         Perform_New_UI();
     } else {
         Perform_Old_UI();
@@ -309,7 +309,7 @@ Out of the box the library ships with a ParallelChange contextual feature filter
 
 * Alternatively the UI can do
     ```C#
-    if (await featureService.IsEnabled("feature")) {
+    if (await featureService.IsOn("feature")) {
         Perform_New_UI();
     } else {
         Perform_Old_UI();

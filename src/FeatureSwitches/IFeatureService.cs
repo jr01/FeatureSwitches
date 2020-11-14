@@ -13,23 +13,23 @@ namespace FeatureSwitches
         Task<string[]> GetFeatures(CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Tests if the boolean featureswitch is enabled.
+        /// Tests if the boolean featureswitch is on.
         /// </summary>
         /// <param name="feature">The featureswitch name.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>True if the switch is enabled, false if not enabled or the feature doesn't exist.</returns>
-        Task<bool> IsEnabled(string feature, CancellationToken cancellationToken = default);
+        /// <returns>True if the switch is on, false if off or the feature doesn't exist.</returns>
+        Task<bool> IsOn(string feature, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Tests if the boolean featureswitch is enabled within the specified evaluation context.
+        /// Tests if the boolean featureswitch is on within the specified evaluation context.
         /// The evaluation context is passed into featurefilter's that implement <see cref="Filters.IContextualFeatureFilter"/>.
         /// </summary>
         /// <param name="feature">The featureswitch name.</param>
         /// <param name="evaluationContext">The evaluationcontext.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <typeparam name="TEvaluationContext">The evaluation context type.</typeparam>
-        /// <returns>True if the switch is enabled, false if not enabled or the feature doesn't exist.</returns>
-        Task<bool> IsEnabled<TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
+        /// <returns>True if the switch is on, false if off or the feature doesn't exist.</returns>
+        Task<bool> IsOn<TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the current value of featureswitch.

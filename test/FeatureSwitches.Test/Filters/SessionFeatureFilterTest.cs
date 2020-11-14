@@ -20,11 +20,11 @@ namespace FeatureSwitches.Test.Filters
             var evaluationContext = new FeatureFilterEvaluationContext("A", JsonSerializer.SerializeToUtf8Bytes(settings));
 
             context.LoginTime = DateTimeOffset.Parse("2020-11-03", CultureInfo.InvariantCulture);
-            Assert.IsFalse(await filter.IsEnabled(evaluationContext));
+            Assert.IsFalse(await filter.IsOn(evaluationContext));
             context.LoginTime = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture);
-            Assert.IsTrue(await filter.IsEnabled(evaluationContext));
+            Assert.IsTrue(await filter.IsOn(evaluationContext));
             context.LoginTime = DateTimeOffset.Parse("2020-11-05", CultureInfo.InvariantCulture);
-            Assert.IsTrue(await filter.IsEnabled(evaluationContext));
+            Assert.IsTrue(await filter.IsOn(evaluationContext));
         }
     }
 }

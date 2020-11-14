@@ -16,7 +16,7 @@ namespace FeatureSwitches.Test.IntegrationTest
 
         public string Name => "Customer";
 
-        public Task<bool> IsEnabled(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
+        public Task<bool> IsOn(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
         {
             var settings = context.GetSettings<CustomerFeatureFilterSettings>();
 
@@ -26,8 +26,8 @@ namespace FeatureSwitches.Test.IntegrationTest
                 return Task.FromResult(false);
             }
 
-            var isEnabled = settings?.Customers.Contains(name) ?? false;
-            return Task.FromResult(isEnabled);
+            var isOn = settings?.Customers.Contains(name) ?? false;
+            return Task.FromResult(isOn);
         }
 
         private static string? GetCurrentCustomer()

@@ -5,6 +5,6 @@ namespace FeatureSwitches.Filters
 {
     public interface IContextualFeatureFilter : IFeatureFilterMetadata
     {
-        Task<bool> IsEnabled(FeatureFilterEvaluationContext context, object? evaluationContext, CancellationToken cancellationToken = default);
+        Task<bool> IsOn(FeatureFilterEvaluationContext context, object? evaluationContext, CancellationToken cancellationToken = default);
     }
 }
