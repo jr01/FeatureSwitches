@@ -35,7 +35,7 @@ namespace FeatureSwitches.Test.Filters
         private static FeatureFilterEvaluationContext GetContext(ParallelChange parallelChange)
         {
             var settings = new ScalarValueSetting<ParallelChange>(parallelChange);
-            return new FeatureFilterEvaluationContext("A", JsonSerializer.SerializeToUtf8Bytes(settings));
+            return new FeatureFilterEvaluationContext("A", settings);
         }
     }
 }

@@ -49,19 +49,19 @@ namespace FeatureSwitches
             TEvaluationContext? evaluationContext,
             CancellationToken cancellationToken = default)
         {
-            var rawValue = await this.GetRawValue(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
-            if (rawValue is null)
+            var bytes = await this.GetBytes(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
+            if (bytes is null)
             {
                 return default!;
             }
 
-            return JsonSerializer.Deserialize<TFeatureType>(rawValue);
+            return JsonSerializer.Deserialize<TFeatureType?>(bytes);
         }
 
-        public Task<byte[]?> GetRawValue(string feature, CancellationToken cancellationToken = default) =>
-            this.GetRawValue<object>(feature, null!, cancellationToken);
+        public Task<byte[]?> GetBytes(string feature, CancellationToken cancellationToken = default) =>
+            this.GetBytes<object>(feature, null!, cancellationToken);
 
-        public async Task<byte[]?> GetRawValue<TEvaluationContext>(
+        public async Task<byte[]?> GetBytes<TEvaluationContext>(
             string feature,
             TEvaluationContext evaluationContext,
             CancellationToken cancellationToken = default)
@@ -77,10 +77,10 @@ namespace FeatureSwitches
             }
 
             byte[]? switchValue = default!;
-            var evaluationResult = await this.GetSerializedSwitchValue(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
+            var evaluationResult = await this.GetSwitchValue(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
             if (evaluationResult.IsOn)
             {
-                switchValue = evaluationResult.SerializedSwitchValue;
+                switchValue = JsonSerializer.SerializeToUtf8Bytes(evaluationResult.SwitchValue);
             }
 
             FeatureCacheOptions options = new ();
@@ -132,7 +132,7 @@ namespace FeatureSwitches
             }
         }
 
-        private async Task<EvaluationResult> GetSerializedSwitchValue<TEvaluationContext>(
+        private async Task<EvaluationResult> GetSwitchValue<TEvaluationContext>(
             string feature,
             TEvaluationContext evaluationContext,
             CancellationToken cancellationToken)
@@ -148,7 +148,7 @@ namespace FeatureSwitches
                 return evalutionResult;
             }
 
-            evalutionResult.SerializedSwitchValue = featureDefinition.OffValue;
+            evalutionResult.SwitchValue = featureDefinition.OffValue;
             if (!featureDefinition.IsOn)
             {
                 return evalutionResult;
@@ -173,17 +173,17 @@ namespace FeatureSwitches
 
                     var filter = this.GetFeatureFilter(featureFilterDefinition);
 
-                    FeatureFilterEvaluationContext context = new (feature, featureFilterDefinition.Config);
+                    FeatureFilterEvaluationContext context = new (feature, featureFilterDefinition.Settings);
                     var isOn = await EvaluateFilter(filter, context, evaluationContext, cancellationToken).ConfigureAwait(false);
                     if (isOn)
                     {
-                        evalutionResult.SerializedSwitchValue = group is null ?
+                        evalutionResult.SwitchValue = group is null ?
                             featureDefinition.OnValue :
                             group.OnValue;
                     }
                     else
                     {
-                        evalutionResult.SerializedSwitchValue = featureDefinition.OffValue;
+                        evalutionResult.SwitchValue = featureDefinition.OffValue;
                         groupIsOn = false;
                         break;
                     }
@@ -203,7 +203,7 @@ namespace FeatureSwitches
 
         private IFeatureFilterMetadata GetFeatureFilter(FeatureFilterDefinition featureFilterConfiguration)
         {
-            return this.featureFilterMetadataCache.GetOrAdd(featureFilterConfiguration.Type, name =>
+            return this.featureFilterMetadataCache.GetOrAdd(featureFilterConfiguration.Name, name =>
             {
                 var ff = this.filters.FirstOrDefault(x => x.Name == name);
                 return ff ?? throw new InvalidOperationException($"Unknown feature filter {name}");
@@ -214,7 +214,7 @@ namespace FeatureSwitches
         {
             public bool IsOn { get; set; }
 
-            public byte[] SerializedSwitchValue { get; set; } = null!;
+            public object? SwitchValue { get; set; }
         }
     }
 }

@@ -81,7 +81,7 @@ namespace FeatureSwitches.Test.Filters
 
         private static FeatureFilterEvaluationContext GetContext(DateTimeFeatureFilterSettings settings)
         {
-            return new FeatureFilterEvaluationContext("A", JsonSerializer.SerializeToUtf8Bytes(settings));
+            return new FeatureFilterEvaluationContext("A", settings);
         }
     }
 }

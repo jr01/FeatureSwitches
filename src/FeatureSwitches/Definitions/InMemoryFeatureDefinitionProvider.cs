@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,12 +37,12 @@ namespace FeatureSwitches.Definitions
                 throw new InvalidOperationException($"Feature {feature} must be defined first.");
             }
 
-            var filter = definition.Filters.FirstOrDefault(x => x.Type == featureFilterName && x.Group == group);
+            var filter = definition.Filters.FirstOrDefault(x => x.Name == featureFilterName && x.Group == group);
             if (filter is null)
             {
                 filter = new FeatureFilterDefinition
                 {
-                    Type = featureFilterName,
+                    Name = featureFilterName,
                 };
 
                 definition.Filters.Add(filter);
@@ -60,11 +59,11 @@ namespace FeatureSwitches.Definitions
 
             if (config is string stringConfig)
             {
-                filter.Config = Encoding.UTF8.GetBytes(stringConfig);
+                filter.Settings = JsonSerializer.Deserialize<object?>(stringConfig);
             }
             else
             {
-                filter.Config = JsonSerializer.SerializeToUtf8Bytes(config);
+                filter.Settings = config;
             }
         }
 
@@ -88,12 +87,15 @@ namespace FeatureSwitches.Definitions
         {
             if (!this.featureSwitches.TryGetValue(feature, out var definition))
             {
-                definition = new ();
+                definition = new ()
+                {
+                    Name = feature
+                };
                 this.featureSwitches.Add(feature, definition);
             }
 
-            definition.OffValue = JsonSerializer.SerializeToUtf8Bytes(offValue);
-            definition.OnValue = JsonSerializer.SerializeToUtf8Bytes(onValue);
+            definition.OffValue = offValue;
+            definition.OnValue = onValue;
             definition.IsOn = isOn;
         }
 
@@ -131,8 +133,52 @@ namespace FeatureSwitches.Definitions
                 definition.FilterGroups.Add(featureFilterGroup);
             }
 
-            featureFilterGroup.OnValue = JsonSerializer.SerializeToUtf8Bytes(onValue);
+            featureFilterGroup.OnValue = onValue;
             featureFilterGroup.IsOn = isOn;
         }
+
+        /// <summary>
+        /// Load the features.
+        /// </summary>
+        /// <param name="features">The features.</param>
+        public void Load(IEnumerable<FeatureDefinition> features)
+        {
+            this.featureSwitches.Clear();
+            foreach (var feature in features)
+            {
+                this.featureSwitches.Add(feature.Name, feature);
+            }
+        }
+
+        /// <summary>
+        /// Load the features from a JSON formatted string.
+        /// </summary>
+        /// <remarks>
+        /// The JSON should be structured according to <see cref="SaveToJson"/>.
+        /// It can contain extra custom fields for enriching the feature definition, they are ignored.
+        /// </remarks>
+        /// <param name="json">The json.</param>
+        public void LoadFromJson(string json)
+        {
+            var features = JsonSerializer.Deserialize<IEnumerable<FeatureDefinition>>(json);
+            if (features is null)
+            {
+                throw new InvalidOperationException("Invalid json.");
+            }
+
+            this.Load(features);
+        }
+
+        /// <summary>
+        /// Save the features.
+        /// </summary>
+        /// <returns>A list of feature definitions.</returns>
+        public IList<FeatureDefinition> Save() => this.featureSwitches.Values.ToList();
+
+        /// <summary>
+        /// Save the feature definitions into pretty JSON format.
+        /// </summary>
+        /// <returns>A JSON formatted string.</returns>
+        public string SaveToJson() => JsonSerializer.Serialize(this.Save(), new JsonSerializerOptions { WriteIndented = true });
     }
 }

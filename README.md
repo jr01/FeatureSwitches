@@ -31,6 +31,8 @@ Switch application features on, off, or to any defined value.
   * Feature evaluations are cached using the evaluation context.
 * Pluggable feature definition providers
   * `InMemoryFeatureProvider` can be used in automated tests, or as an intermediate.
+    * Load feature definitions from JSON
+    * Load feature definitions programmatically
 * Dependency Injection framework independent.
 
 ## Important!
@@ -315,3 +317,61 @@ Out of the box the library ships with a ParallelChange contextual feature filter
         Perform_Old_UI();
     }
     ```
+
+## Loading from JSON
+
+```json
+[
+  {
+    "Name": "FeatureA",
+    "OffValue": false,
+    "IsOn": true,
+    "OnValue": false,
+    "Filters": [
+      {
+        "Name": "User",
+        "Settings": {
+            "AllowedNames": [
+                "John"
+            ]
+        },
+        "Group": "GroupA"
+      },
+      {
+        "Name": "User",
+        "Settings": {
+            "AllowedNames": [
+                "Jane"
+            ]
+        },
+        "Group": "GroupB"
+      }
+    ],
+    "FilterGroups": [
+      {
+        "Name": "GroupA",
+        "IsOn": false,
+        "OnValue": true
+      },
+      {
+        "Name": "GroupB",
+        "IsOn": true,
+        "OnValue": true
+      }
+    ]
+  }
+]
+```
+
+```c#
+var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
+featureDefinitionProvider.LoadFromJson(json);
+
+// or do your own deserialization
+using (var fs = File.OpenRead("features.json"))
+{
+    var definitions = await System.Text.Json.JsonSerializer.DeserializeAsync<IEnumerable<FeatureDefinition>>(fs);
+    featureDefinitionProvider.Load(definitions);
+}
+```
+

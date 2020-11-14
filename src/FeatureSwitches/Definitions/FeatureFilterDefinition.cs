@@ -2,12 +2,19 @@
 {
     public class FeatureFilterDefinition
     {
-        public string Type { get; set; } = null!;
+        /// <summary>
+        /// Gets or sets the filter name.
+        /// </summary>
+        public string Name { get; set; } = null!;
 
-#pragma warning disable CA1819 // Properties should not return arrays
-        public byte[] Config { get; set; } = null!;
-#pragma warning restore CA1819 // Properties should not return arrays
+        /// <summary>
+        /// Gets or sets the filter settings.
+        /// </summary>
+        public object? Settings { get; set; }
 
+        /// <summary>
+        /// Gets or sets the filter group.
+        /// </summary>
         public string? Group { get; set; }
     }
 }

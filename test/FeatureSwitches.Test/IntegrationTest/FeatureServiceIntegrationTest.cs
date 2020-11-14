@@ -116,7 +116,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             var featureService = this.sp.GetRequiredService<FeatureService>();
             Assert.IsFalse(await featureService.IsOn("Chicken"));
             Assert.IsFalse(await featureService.GetValue<bool>("Chicken"));
-            Assert.IsNull(await featureService.GetValue<TestVariation>("Chicken"));
+            Assert.IsNull(await featureService.GetValue<TestVariation>("Egg"));
         }
 
         [TestMethod]
@@ -141,6 +141,64 @@ namespace FeatureSwitches.Test.IntegrationTest
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } }, "GroupA");
             featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "B" } }, "GroupB");
 
+            var featureService = this.sp.GetRequiredService<FeatureService>();
+            SetCurrentCustomer("A");
+            Assert.IsFalse(await featureService.IsOn("FeatureA"));
+            SetCurrentCustomer("B");
+            Assert.IsTrue(await featureService.IsOn("FeatureA"));
+            SetCurrentCustomer("C");
+            Assert.IsFalse(await featureService.IsOn("FeatureA"));
+        }
+
+        [TestMethod]
+        public async Task LoadFromJson()
+        {
+            // can't expect the user to write base64
+            // anything below the node should be auto byte arrayed.
+            var json = @"
+[
+  {
+    ""Name"": ""FeatureA"",
+    ""OffValue"": false,
+    ""IsOn"": true,
+    ""OnValue"": false,
+    ""Filters"": [
+      {
+        ""Name"": ""Customer"",
+        ""Settings"": {
+            ""Customers"": [
+                ""A"",
+                ""C""
+            ]
+        },
+        ""Group"": ""GroupA""
+      },
+      {
+        ""Name"": ""Customer"",
+        ""Settings"": {
+            ""Customers"": [
+                ""B""
+            ]
+        },
+        ""Group"": ""GroupB""
+      }
+    ],
+    ""FilterGroups"": [
+      {
+        ""Name"": ""GroupA"",
+        ""IsOn"": false,
+        ""OnValue"": true
+      },
+      {
+        ""Name"": ""GroupB"",
+        ""IsOn"": true,
+        ""OnValue"": true
+      }
+    ]
+  }
+]";
+            var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
+            featureDatabase.LoadFromJson(json);
             var featureService = this.sp.GetRequiredService<FeatureService>();
             SetCurrentCustomer("A");
             Assert.IsFalse(await featureService.IsOn("FeatureA"));

@@ -17,7 +17,7 @@ namespace FeatureSwitches.Test.Filters
             var filter = new SessionFeatureFilter(context);
 
             var settings = new SessionFeatureFilterSettings { From = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture) };
-            var evaluationContext = new FeatureFilterEvaluationContext("A", JsonSerializer.SerializeToUtf8Bytes(settings));
+            var evaluationContext = new FeatureFilterEvaluationContext("A", settings);
 
             context.LoginTime = DateTimeOffset.Parse("2020-11-03", CultureInfo.InvariantCulture);
             Assert.IsFalse(await filter.IsOn(evaluationContext));

@@ -4,9 +4,9 @@ namespace FeatureSwitches.Filters
 {
     public class FeatureFilterEvaluationContext
     {
-        private readonly byte[] settings;
+        private readonly object? settings;
 
-        public FeatureFilterEvaluationContext(string feature, byte[] settings)
+        public FeatureFilterEvaluationContext(string feature, object? settings)
         {
             this.Feature = feature;
             this.settings = settings;
@@ -16,7 +16,7 @@ namespace FeatureSwitches.Filters
 
         public T? GetSettings<T>()
         {
-            return JsonSerializer.Deserialize<T>(this.settings);
+            return JsonSerializer.Deserialize<T>(JsonSerializer.SerializeToUtf8Bytes(this.settings));
         }
     }
 }
