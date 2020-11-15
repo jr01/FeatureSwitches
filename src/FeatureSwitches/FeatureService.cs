@@ -143,7 +143,9 @@ namespace FeatureSwitches
 
             EvaluationResult evalutionResult = new ()
             {
-                SwitchValue = featureDefinition.OffValue
+                SwitchValue = featureDefinition.IsOn ?
+                    featureDefinition.OnValue :
+                    featureDefinition.OffValue
             };
 
             if (!featureDefinition.IsOn)
@@ -159,15 +161,15 @@ namespace FeatureSwitches
                 var group = filterGrouping.Key is null ? null :
                     featureDefinition.FilterGroups.FirstOrDefault(x => x.Name == filterGrouping.Key);
 
+                if (group is not null && !group.IsOn)
+                {
+                    evalutionResult.SwitchValue = featureDefinition.OffValue;
+                    continue;
+                }
+
                 var groupIsOn = true;
                 foreach (var featureFilterDefinition in filterGrouping)
                 {
-                    if (group is not null && !group.IsOn)
-                    {
-                        groupIsOn = false;
-                        break;
-                    }
-
                     var filter = this.GetFeatureFilter(featureFilterDefinition);
 
                     FeatureFilterEvaluationContext context = new (feature, featureFilterDefinition.Settings);

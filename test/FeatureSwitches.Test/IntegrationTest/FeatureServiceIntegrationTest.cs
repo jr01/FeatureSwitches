@@ -104,7 +104,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         public async Task Invalid_request()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("Egg", offValue: true);
+            featureDatabase.SetFeature("Egg");
             var featureService = this.sp.GetRequiredService<FeatureService>();
             await Assert.ThrowsExceptionAsync<JsonException>(() => featureService.GetValue<TestVariation>("Egg"));
             Assert.IsTrue(await featureService.IsOn("Egg"));
@@ -120,14 +120,14 @@ namespace FeatureSwitches.Test.IntegrationTest
         }
 
         [TestMethod]
-        public async Task Feature_is_off_when_no_filters_defined()
+        public async Task Feature_is_on_when_no_filters_defined()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
-            featureDatabase.SetFeature("Egg");
+            featureDatabase.SetFeature("Egg", isOn: true);
 
             var featureService = this.sp.GetRequiredService<FeatureService>();
 
-            Assert.IsFalse(await featureService.IsOn("Egg"));
+            Assert.IsTrue(await featureService.IsOn("Egg"));
         }
 
         [TestMethod]
@@ -289,25 +289,22 @@ namespace FeatureSwitches.Test.IntegrationTest
 
             var offValue = JsonSerializer.Deserialize<object?>(JsonSerializer.SerializeToUtf8Bytes("Off"));
             var onValue = JsonSerializer.Deserialize<object?>(JsonSerializer.SerializeToUtf8Bytes("On"));
-            var halfwayValue = JsonSerializer.Deserialize<object?>(JsonSerializer.SerializeToUtf8Bytes("Halfway"));
 
             featureDatabase.SetFeature("FeatureA", offValue: offValue, onValue: onValue, isOn: false);
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", onValue: halfwayValue);
-            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", onValue: onValue);
 
-            featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }", "GroupA");
-            featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
-
-            var featureService = this.sp.GetRequiredService<FeatureService>();
-            Assert.AreEqual("Off", await featureService.GetValue<string>("FeatureA"));
+            using (var scope = this.sp.CreateScope())
+            {
+                var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
+                Assert.AreEqual("Off", await featureService.GetValue<string>("FeatureA"));
+            }
 
             featureDatabase.SetFeature("FeatureA", offValue: offValue, onValue: onValue, isOn: true);
-            SetCurrentCustomer("A");
-            Assert.AreEqual("Halfway", await featureService.GetValue<string>("FeatureA"));
-            SetCurrentCustomer("B");
-            Assert.AreEqual("On", await featureService.GetValue<string>("FeatureA"));
-            SetCurrentCustomer("C");
-            Assert.AreEqual("Off", await featureService.GetValue<string>("FeatureA"));
+
+            using (var scope = this.sp.CreateScope())
+            {
+                var featureService = scope.ServiceProvider.GetRequiredService<FeatureService>();
+                Assert.AreEqual("On", await featureService.GetValue<string>("FeatureA"));
+            }
         }
 
         [TestMethod]
