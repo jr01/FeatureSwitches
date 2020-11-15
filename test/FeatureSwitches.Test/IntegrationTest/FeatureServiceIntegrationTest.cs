@@ -283,6 +283,34 @@ namespace FeatureSwitches.Test.IntegrationTest
         }
 
         [TestMethod]
+        public async Task Variations_strings()
+        {
+            var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
+
+            var offValue = JsonSerializer.Deserialize<object?>(JsonSerializer.SerializeToUtf8Bytes("Off"));
+            var onValue = JsonSerializer.Deserialize<object?>(JsonSerializer.SerializeToUtf8Bytes("On"));
+            var halfwayValue = JsonSerializer.Deserialize<object?>(JsonSerializer.SerializeToUtf8Bytes("Halfway"));
+
+            featureDatabase.SetFeature("FeatureA", offValue: offValue, onValue: onValue, isOn: false);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", onValue: halfwayValue);
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", onValue: onValue);
+
+            featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }", "GroupA");
+            featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
+
+            var featureService = this.sp.GetRequiredService<FeatureService>();
+            Assert.AreEqual("Off", await featureService.GetValue<string>("FeatureA"));
+
+            featureDatabase.SetFeature("FeatureA", offValue: offValue, onValue: onValue, isOn: true);
+            SetCurrentCustomer("A");
+            Assert.AreEqual("Halfway", await featureService.GetValue<string>("FeatureA"));
+            SetCurrentCustomer("B");
+            Assert.AreEqual("On", await featureService.GetValue<string>("FeatureA"));
+            SetCurrentCustomer("C");
+            Assert.AreEqual("Off", await featureService.GetValue<string>("FeatureA"));
+        }
+
+        [TestMethod]
         public async Task Variations_objects()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();

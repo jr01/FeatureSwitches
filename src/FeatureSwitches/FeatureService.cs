@@ -76,12 +76,10 @@ namespace FeatureSwitches
                 }
             }
 
-            byte[]? switchValue = default!;
             var evaluationResult = await this.GetSwitchValue(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
-            if (evaluationResult.IsOn)
-            {
-                switchValue = JsonSerializer.SerializeToUtf8Bytes(evaluationResult.SwitchValue);
-            }
+            var switchValue = evaluationResult is null ?
+                default! :
+                JsonSerializer.SerializeToUtf8Bytes(evaluationResult.SwitchValue);
 
             FeatureCacheOptions options = new ();
             foreach (var cache in this.featureEvaluationCaches)
@@ -132,23 +130,22 @@ namespace FeatureSwitches
             }
         }
 
-        private async Task<EvaluationResult> GetSwitchValue<TEvaluationContext>(
+        private async Task<EvaluationResult?> GetSwitchValue<TEvaluationContext>(
             string feature,
             TEvaluationContext evaluationContext,
             CancellationToken cancellationToken)
         {
-            EvaluationResult evalutionResult = new ()
-            {
-                IsOn = false
-            };
-
             var featureDefinition = await this.featureDefinitionProvider.GetFeatureDefinition(feature, cancellationToken).ConfigureAwait(false);
             if (featureDefinition is null)
             {
-                return evalutionResult;
+                return null;
             }
 
-            evalutionResult.SwitchValue = featureDefinition.OffValue;
+            EvaluationResult evalutionResult = new ()
+            {
+                SwitchValue = featureDefinition.OffValue
+            };
+
             if (!featureDefinition.IsOn)
             {
                 return evalutionResult;
@@ -197,7 +194,6 @@ namespace FeatureSwitches
                 }
             }
 
-            evalutionResult.IsOn = true;
             return evalutionResult;
         }
 
@@ -212,8 +208,6 @@ namespace FeatureSwitches
 
         private class EvaluationResult
         {
-            public bool IsOn { get; set; }
-
             public object? SwitchValue { get; set; }
         }
     }
