@@ -120,6 +120,16 @@ namespace FeatureSwitches.Test.IntegrationTest
         }
 
         [TestMethod]
+        public async Task IsOn_with_non_boolean_feature()
+        {
+            var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
+            featureDatabase.SetFeature("Switch", isOn: true, offValue: "Off", onValue: "On");
+
+            var featureService = this.sp.GetRequiredService<FeatureService>();
+            await Assert.ThrowsExceptionAsync<JsonException>(() => featureService.IsOn("Switch"));
+        }
+
+        [TestMethod]
         public async Task Feature_is_on_when_no_filters_defined()
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
@@ -148,6 +158,18 @@ namespace FeatureSwitches.Test.IntegrationTest
             Assert.IsTrue(await featureService.IsOn("FeatureA"));
             SetCurrentCustomer("C");
             Assert.IsFalse(await featureService.IsOn("FeatureA"));
+        }
+
+        [TestMethod]
+        public async Task First_matching_group_wins()
+        {
+            var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
+            featureDatabase.SetFeature("FeatureA", isOn: true, onValue: "on", offValue: "off");
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupA", isOn: true, onValue: "a");
+            featureDatabase.SetFeatureGroup("FeatureA", "GroupB", isOn: true, onValue: "b");
+
+            var featureService = this.sp.GetRequiredService<FeatureService>();
+            Assert.AreEqual("a", await featureService.GetValue<string>("FeatureA"));
         }
 
         [TestMethod]

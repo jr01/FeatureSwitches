@@ -141,62 +141,54 @@ namespace FeatureSwitches
                 return null;
             }
 
+            Task<bool> EvaluateGroupFilters(string? group) => this.EvaluateFilters(
+                feature,
+                featureDefinition.Filters.Where(x => x.Group == group),
+                evaluationContext,
+                cancellationToken);
+
             EvaluationResult evalutionResult = new ()
             {
-                SwitchValue = featureDefinition.IsOn ?
-                    featureDefinition.OnValue :
-                    featureDefinition.OffValue
+                SwitchValue = featureDefinition.OffValue
             };
 
-            if (!featureDefinition.IsOn)
+            if (featureDefinition.IsOn && await EvaluateGroupFilters(null).ConfigureAwait(false))
             {
-                return evalutionResult;
-            }
-
-            var filterGroups = featureDefinition.Filters.GroupBy(x => x.Group);
-            foreach (var filterGrouping in filterGroups)
-            {
-                // Filtergroups are OR'ed, except for the null group.
-                // All filters within 1 group are AND'ed.
-                var group = filterGrouping.Key is null ? null :
-                    featureDefinition.FilterGroups.FirstOrDefault(x => x.Name == filterGrouping.Key);
-
-                if (group is not null && !group.IsOn)
+                if (featureDefinition.FilterGroups.Count == 0)
                 {
-                    evalutionResult.SwitchValue = featureDefinition.OffValue;
-                    continue;
+                    evalutionResult.SwitchValue = featureDefinition.OnValue;
                 }
-
-                var groupIsOn = true;
-                foreach (var featureFilterDefinition in filterGrouping)
+                else
                 {
-                    var filter = this.GetFeatureFilter(featureFilterDefinition);
-
-                    FeatureFilterEvaluationContext context = new (feature, featureFilterDefinition.Settings);
-                    var isOn = await EvaluateFilter(filter, context, evaluationContext, cancellationToken).ConfigureAwait(false);
-                    if (isOn)
+                    foreach (var group in featureDefinition.FilterGroups.Where(g => g.IsOn))
                     {
-                        evalutionResult.SwitchValue = group is null ?
-                            featureDefinition.OnValue :
-                            group.OnValue;
+                        if (await EvaluateGroupFilters(group.Name).ConfigureAwait(false))
+                        {
+                            evalutionResult.SwitchValue = group.OnValue;
+                            break;
+                        }
                     }
-                    else
-                    {
-                        evalutionResult.SwitchValue = featureDefinition.OffValue;
-                        groupIsOn = false;
-                        break;
-                    }
-                }
-
-                if ((groupIsOn && filterGrouping.Key is not null) ||
-                    (!groupIsOn && filterGrouping.Key is null))
-                {
-                    // null group is always AND'ed
-                    break;
                 }
             }
 
             return evalutionResult;
+        }
+
+        private async Task<bool> EvaluateFilters<TEvaluationContext>(string feature, IEnumerable<FeatureFilterDefinition> filters, TEvaluationContext evaluationContext, CancellationToken cancellationToken)
+        {
+            foreach (var featureFilterDefinition in filters)
+            {
+                var filter = this.GetFeatureFilter(featureFilterDefinition);
+
+                FeatureFilterEvaluationContext context = new (feature, featureFilterDefinition.Settings);
+                var isOn = await EvaluateFilter(filter, context, evaluationContext, cancellationToken).ConfigureAwait(false);
+                if (!isOn)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private IFeatureFilterMetadata GetFeatureFilter(FeatureFilterDefinition featureFilterConfiguration)
