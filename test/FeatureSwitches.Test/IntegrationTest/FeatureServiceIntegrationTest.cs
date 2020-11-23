@@ -320,7 +320,7 @@ namespace FeatureSwitches.Test.IntegrationTest
                 Assert.AreEqual("Off", await featureService.GetValue<string>("FeatureA"));
             }
 
-            featureDatabase.SetFeature("FeatureA", offValue: offValue, onValue: onValue, isOn: true);
+            featureDatabase.ToggleFeature("FeatureA", isOn: true);
 
             using (var scope = this.sp.CreateScope())
             {
@@ -417,7 +417,7 @@ namespace FeatureSwitches.Test.IntegrationTest
         {
             var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
             featureDatabase.SetFeature("FeatureA", isOn: false);
-            featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"Setting\": \"Expanded\" }");
+            featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "\"Expanded\"");
 
             using (var scope = this.sp.CreateScope())
             {
@@ -429,7 +429,7 @@ namespace FeatureSwitches.Test.IntegrationTest
                 Assert.IsFalse(await featureService.IsOn("FeatureA", ParallelChange.Contracted));
             }
 
-            featureDatabase.SetFeature("FeatureA", isOn: true);
+            featureDatabase.ToggleFeature("FeatureA", isOn: true);
 
             using (var scope = this.sp.CreateScope())
             {
@@ -441,7 +441,7 @@ namespace FeatureSwitches.Test.IntegrationTest
                 Assert.IsFalse(await featureService.IsOn("FeatureA", ParallelChange.Contracted));
             }
 
-            featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"Setting\": \"Migrated\" }");
+            featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "\"Migrated\"");
 
             using (var scope = this.sp.CreateScope())
             {
@@ -452,7 +452,7 @@ namespace FeatureSwitches.Test.IntegrationTest
                 Assert.IsFalse(await featureService.IsOn("FeatureA", ParallelChange.Contracted));
             }
 
-            featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"Setting\": \"Contracted\" }");
+            featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "\"Contracted\"");
 
             using (var scope = this.sp.CreateScope())
             {

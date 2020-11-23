@@ -3,14 +3,20 @@
 
   <PropertyGroup>
     <!-- 
+        [CA1034: No class nesting]
+          test code.
         [CA1303: Do not pass literals as localized parameters] 
           reasoning: test projects won't use translations
         [CA1707: Remove the underscores from member name]
           reasoning: ok for test names.
+        [CA1819: Properties should not return arrays]
+          test code.
         [CA2007: Consider calling ConfigureAwait on the awaited task]
           test code is not library code.
+        [CA2227: Change property to be read-only by removing property setter]
+          test code.
     -->
-    <NoWarn>$(NoWarn);CA1303;CA1707;CA2007;SA0001</NoWarn>
+    <NoWarn>$(NoWarn);CA1034;CA1303;CA1707;CA1819;CA2007;CA2227;SA0001</NoWarn>
   </PropertyGroup>
 
 </Project>

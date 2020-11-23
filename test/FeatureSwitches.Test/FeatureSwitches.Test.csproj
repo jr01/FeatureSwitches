@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FeatureSwitches.ServiceCollection\FeatureSwitches.ServiceCollection.csproj" />
+    <ProjectReference Include="..\..\src\FeatureSwitches.MSTest\FeatureSwitches.MSTest.csproj" />
     <ProjectReference Include="..\..\src\FeatureSwitches\FeatureSwitches.csproj" />
   </ItemGroup>
 

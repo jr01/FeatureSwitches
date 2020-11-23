@@ -7,7 +7,7 @@
   <PropertyGroup>
     <Description>Simple feature management for .NET</Description>
     <PackageId>FeatureSwitches</PackageId>
-    <Version>1.0.9</Version>
+    <Version>1.0.10</Version>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

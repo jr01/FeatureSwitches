@@ -4,6 +4,7 @@ namespace FeatureSwitches.Filters
 {
     public class FeatureFilterEvaluationContext
     {
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new () { PropertyNameCaseInsensitive = true };
         private readonly object? settings;
 
         public FeatureFilterEvaluationContext(string feature, object? settings)
@@ -16,7 +17,7 @@ namespace FeatureSwitches.Filters
 
         public T? GetSettings<T>()
         {
-            return JsonSerializer.Deserialize<T>(JsonSerializer.SerializeToUtf8Bytes(this.settings));
+            return JsonSerializer.Deserialize<T>(JsonSerializer.SerializeToUtf8Bytes(this.settings), JsonSerializerOptions);
         }
     }
 }

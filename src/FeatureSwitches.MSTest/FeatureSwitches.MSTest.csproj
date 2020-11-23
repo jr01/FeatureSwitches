@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net5.0</TargetFrameworks>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <Description>FeatureSwitches MSTest</Description>
+    <PackageId>FeatureSwitches.MSTest</PackageId>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FeatureSwitches\FeatureSwitches.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="2.1.2" />
+  </ItemGroup>
+</Project>

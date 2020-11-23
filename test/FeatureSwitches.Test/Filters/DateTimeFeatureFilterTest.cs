@@ -79,6 +79,42 @@ namespace FeatureSwitches.Test.Filters
             Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
         }
 
+        [TestMethod]
+        public void Deserialize_with_Uppercased_property_names()
+        {
+            var settings = new
+            {
+                From = DateTimeOffset.Parse("2020-11-21T00:00:00.000Z", CultureInfo.InvariantCulture),
+                To = (DateTimeOffset?)null
+            };
+
+            var context = new FeatureFilterEvaluationContext("A", settings);
+
+            var dateTimeFilterSettings = context.GetSettings<DateTimeFeatureFilterSettings>();
+            Assert.IsNotNull(dateTimeFilterSettings);
+
+            Assert.AreEqual(settings.From, dateTimeFilterSettings!.From);
+            Assert.IsNull(dateTimeFilterSettings.To);
+        }
+
+        [TestMethod]
+        public void Deserialize_with_lowercased_property_names()
+        {
+            var settings = new
+            {
+                from = DateTimeOffset.Parse("2020-11-21T00:00:00.000Z", CultureInfo.InvariantCulture),
+                to = (DateTimeOffset?)null
+            };
+
+            var context = new FeatureFilterEvaluationContext("A", settings);
+
+            var dateTimeFilterSettings = context.GetSettings<DateTimeFeatureFilterSettings>();
+            Assert.IsNotNull(dateTimeFilterSettings);
+
+            Assert.AreEqual(settings.from, dateTimeFilterSettings!.From);
+            Assert.IsNull(dateTimeFilterSettings.To);
+        }
+
         private static FeatureFilterEvaluationContext GetContext(DateTimeFeatureFilterSettings settings)
         {
             return new FeatureFilterEvaluationContext("A", settings);

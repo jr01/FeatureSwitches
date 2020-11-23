@@ -10,13 +10,8 @@ namespace FeatureSwitches.Filters
 
         public override Task<bool> IsOn(FeatureFilterEvaluationContext context, ParallelChange evaluationContext, CancellationToken cancellationToken = default)
         {
-            var settings = context.GetSettings<ScalarValueSetting<ParallelChange>>();
-            if (settings is null)
-            {
-                throw new InvalidOperationException("Invalid settings.");
-            }
-
-            var isOn = settings.Setting switch
+            var settings = context.GetSettings<ParallelChange>();
+            var isOn = settings switch
             {
                 ParallelChange.Expanded =>
                     evaluationContext == ParallelChange.Expanded,

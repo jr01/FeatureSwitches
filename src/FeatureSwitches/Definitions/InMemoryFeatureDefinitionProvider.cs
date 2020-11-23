@@ -68,7 +68,7 @@ namespace FeatureSwitches.Definitions
         }
 
         /// <summary>
-        /// Adds a definition for a <see cref="bool"/> feature.
+        /// Adds a new definition for a <see cref="bool"/> feature.
         /// </summary>
         /// <param name="feature">The feature.</param>
         /// <param name="isOn">If the feature should be on or off, on by default.</param>
@@ -76,7 +76,7 @@ namespace FeatureSwitches.Definitions
             this.SetFeature<bool>(feature, isOn: isOn, offValue: false, onValue: true);
 
         /// <summary>
-        /// Adds a definition for a typed feature.
+        /// Adds a new definition for a typed feature.
         /// </summary>
         /// <typeparam name="TFeatureType">The feature type.</typeparam>
         /// <param name="feature">The feature.</param>
@@ -85,22 +85,32 @@ namespace FeatureSwitches.Definitions
         /// <param name="onValue">The value to return when the feature is on and no feature groups have been defined.</param>
         public void SetFeature<TFeatureType>(string feature, bool isOn = true, TFeatureType offValue = default, TFeatureType onValue = default)
         {
+            this.featureSwitches[feature] = new ()
+            {
+                Name = feature,
+                OffValue = offValue,
+                OnValue = onValue,
+                IsOn = isOn
+            };
+        }
+
+        /// <summary>
+        /// Toggles a feature on/off.
+        /// </summary>
+        /// <param name="feature">The feature.</param>
+        /// <param name="isOn">If the feature should be on or off.</param>
+        public void ToggleFeature(string feature, bool isOn)
+        {
             if (!this.featureSwitches.TryGetValue(feature, out var definition))
             {
-                definition = new ()
-                {
-                    Name = feature
-                };
-                this.featureSwitches.Add(feature, definition);
+                throw new InvalidOperationException($"Feature {feature} must be defined first.");
             }
 
-            definition.OffValue = offValue;
-            definition.OnValue = onValue;
             definition.IsOn = isOn;
         }
 
         /// <summary>
-        /// Defines a feature filter group for a <see cref="bool"/> feature.
+        /// Defines a new feature filter group for a <see cref="bool"/> feature.
         /// </summary>
         /// <param name="feature">The feature name.</param>
         /// <param name="group">The group name.</param>
@@ -109,7 +119,7 @@ namespace FeatureSwitches.Definitions
             this.SetFeatureGroup<bool>(feature, group, isOn: isOn, onValue: true);
 
         /// <summary>
-        /// Defines a feature filter group for a typed feature.
+        /// Defines a new feature filter group for a typed feature.
         /// </summary>
         /// <typeparam name="TFeatureType">The feature type.</typeparam>
         /// <param name="feature">The feature.</param>
@@ -134,6 +144,28 @@ namespace FeatureSwitches.Definitions
             }
 
             featureFilterGroup.OnValue = onValue;
+            featureFilterGroup.IsOn = isOn;
+        }
+
+        /// <summary>
+        /// Toggles a featuregroup on/off.
+        /// </summary>
+        /// <param name="feature">The feature.</param>
+        /// <param name="group">The feature group.</param>
+        /// <param name="isOn">If the feature group should be on or off.</param>
+        public void ToggleFeatureGroup(string feature, string group, bool isOn)
+        {
+            if (!this.featureSwitches.TryGetValue(feature, out var definition))
+            {
+                throw new InvalidOperationException($"Feature {feature} must be defined first.");
+            }
+
+            var featureFilterGroup = definition.FilterGroups.FirstOrDefault(x => x.Name == group);
+            if (featureFilterGroup is null)
+            {
+                throw new InvalidOperationException($"Feature group {group} must be defined first.");
+            }
+
             featureFilterGroup.IsOn = isOn;
         }
 

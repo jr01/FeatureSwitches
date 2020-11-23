@@ -32,6 +32,11 @@ jobs:
       with:
         PROJECT_FILE_PATH: src/FeatureSwitches/FeatureSwitches.csproj
         NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+    - name: Publish FeatureSwitches.MSTest NuGet
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: src/FeatureSwitches.MSTest/FeatureSwitches.MSTest.csproj
+        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
     - name: Publish FeatureSwitches.ServiceCollection NuGet
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:

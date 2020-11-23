@@ -3,16 +3,20 @@
 Switch application features on, off, or to any defined value.
 
 * Conditional feature switch support (boolean)
+
 ```C#
      bool isOn = await featureService.IsOn("feature");
 ```
+
 * Any type can be switched to any value; for example to do A/B testing.
+
 ```C#
     bool isOn = await featureService.GetValue<bool>("feature");
     var myTypedValue = await featureService.GetValue<MyType>("feature");
     if (myTypedValue.Setting == 'A')
         ...
 ```
+
 * Feature filters and filter groups, allowing for complex rule evaluation.
 * Turn a feature on/off on feature and filter group level. (aka kill-switch)
 * Contextual feature evaluation.
@@ -24,18 +28,19 @@ Switch application features on, off, or to any defined value.
   * `ParallelChange` - in conjunction with an evaluation context parameter gives support for the [ParallelChange pattern](https://martinfowler.com/bliki/ParallelChange.html) aka Expand/(Migrate/)Contract pattern.
 * Configurable feature evaluation caching
   * For performance and 'stable' feature state.
-  * Supports multiple caches / cache levels. 
+  * Supports multiple caches / cache levels.
     * For example
       * Level-1: In-memory cache with a scoped lifetime.
       * Level-2: Distributed cache like Redis.
   * Feature evaluations are cached using the evaluation context.
 * Pluggable feature definition providers
-  * `InMemoryFeatureProvider` can be used in automated tests, or as an intermediate.
+  * `InMemoryFeatureDefinitionProvider` can be used in automated tests, or as an intermediate.
     * Load feature definitions from JSON
     * Load feature definitions programmatically
 * Dependency Injection framework independent.
+* MSTest run a test multiple times with feature on/off.
 
-## Important!
+## Important
 
 All 1.0.* versions contain breaking changes. From 1.1 semantic versioning will be followed.
   
@@ -52,8 +57,9 @@ serviceCollection.AddFeatureSwitches();
 ### Basic usage
 
 * Define a boolean feature
+
     ```C#
-    var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
+    var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
     featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
     ```
 
@@ -92,6 +98,7 @@ serviceCollection.AddFeatureSwitches();
 ### Feature types
 
 * Define a custom feature type
+
     ```C#
     public enum Direction {
         Left,
@@ -106,6 +113,7 @@ serviceCollection.AddFeatureSwitches();
     ```
 
 * Usage
+
     ```C#
     if (await this.featureService.GetValue<Direction>("DirectionFeature") == DirectionFeature.Left)
     {
@@ -115,10 +123,10 @@ serviceCollection.AddFeatureSwitches();
 
     _Note: If the switch value cannot be converted to the featuretype the offValue will be returned._
 
-
 ### Feature evaluation context accessor
 
 * Ambient evaluation context
+
     ```C#
     public class MyEvaluationContextAccessor : IEvaluationContextAccessor
     {
@@ -132,7 +140,8 @@ serviceCollection.AddFeatureSwitches();
     ```
 
 * Dependency scope evaluation context
-    ```
+
+    ```C#
     public class MyScopedEvaluationContextAccessor : IEvaluationContextAccessor
     {
         private readonly MyApplicationContext context;
@@ -157,9 +166,10 @@ Feature rules define when a feature should be on or off.
 A feature is on when all applied feature filters decide that the feature should be on (logical AND).
 
 * Scoped feature filters
+
     ```C#
     public class MyAppContext
-    { 
+    {
         public string Name { get; set; }
     }
 
@@ -186,7 +196,7 @@ A feature is on when all applied feature filters decide that the feature should 
         }
     }
 
-    var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
+    var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
     featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
     featureDefinitionProvider.SetFeatureFilter("MyBoolFeature", "User", config: "{ \"AllowedNames\": [\"John\", \"Jane\"] }");
     // or
@@ -216,7 +226,7 @@ A feature is on when all applied feature filters decide that the feature should 
         B
     }
 
-    var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
+    var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
     featureDefinitionProvider.SetFeature<AB>("Feature", isOn: true, offValue: AB.Off);
     featureDefinitionProvider.SetFeatureGroup("Feature", "GroupA", isOn:true, onValue: AB.A);
     featureDefinitionProvider.SetFeatureGroup("Feature", "GroupB", isOn:true, onValue: AB.B);
@@ -255,7 +265,7 @@ A contextual feature filter implements `IContextualFeatureFilter`. A handy `Cont
 
 ```C#
 public class MyAppContext
-{ 
+{
     public string Name { get; set; }
 }
 
@@ -270,7 +280,7 @@ public class MyUserFeatureFilter : ContextualFeatureFilter<MyAppContext>
     }
 }
 
-var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
+var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
 featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
 featureDefinitionProvider.SetFeatureFilter("MyBoolFeature", "User", "{ \"allowedNames\": [\"John\", \"Jane\"] }");
 
@@ -278,19 +288,20 @@ var featureService = serviceProvider.GetRequired<FeatureService>();
 Assert.IsTrue(await featureService.IsOn("MyBoolFeature", new MyAppContext { Name = "John" }));
 ```
 
-
 ### ParallelChange pattern aka Expand/Migrate/Contract
 
 Out of the box the library ships with a ParallelChange contextual feature filter. This filter can be added to any feature.
+
 * Define the feature
+
     ```C#
-        var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
+        var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
         featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
-        featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "{ \"setting\": \"Expanded\" }");
+        featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "\"Expanded\"");
     ```
 
-
 * When writing data
+
     ```C#
     if (!await featureService.IsOn("feature", ParallelChange.Contracted)) {
         Perform_Old_DataWrite();
@@ -301,6 +312,7 @@ Out of the box the library ships with a ParallelChange contextual feature filter
     ```
 
 * When checking from UI if the feature can be used
+
     ```C#
     if (await featureService.IsOn("feature", ParallelChange.Migrated)) {
         Perform_New_UI();
@@ -310,6 +322,7 @@ Out of the box the library ships with a ParallelChange contextual feature filter
     ```
 
 * Alternatively the UI can do
+
     ```C#
     if (await featureService.IsOn("feature")) {
         Perform_New_UI();
@@ -363,8 +376,8 @@ Out of the box the library ships with a ParallelChange contextual feature filter
 ]
 ```
 
-```c#
-var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureProvider>();
+```C#
+var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
 featureDefinitionProvider.LoadFromJson(json);
 
 // or do your own deserialization
@@ -375,3 +388,218 @@ using (var fs = File.OpenRead("features.json"))
 }
 ```
 
+## FeatureSwitches.MSTest
+
+The `FeatureSwitches.MSTest` nuget delivers functionality to run a test multiple times for all defined feature On/Off combinations.
+
+Run the same test twice with feature On and Off.
+
+```C#
+[FeatureTestMethod(onOff: "FeatureA")]
+public void MyTestMethod()
+{
+    var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
+    var featureService = serviceProvider.GetRequired<IFeatureService>();
+
+    featureDefinitionProvider.Load(FeatureTestMethodAttribute.Features);
+
+    if (await featureService.IsOn("FeatureA"))
+    {
+        // FeatureA is On asserts
+    }
+    else
+    {
+        // FeatureA is Off asserts
+    }
+}
+```
+
+The `FeatureTestMethodAttribute` defines a feature with `Name=FeatureA,OnValue=true,OffValue=false`. The `FeatureTestMethodAttribute.Features` is an enumerable that contains the feature definitions for the current test run with their `IsOn=true/false`.
+
+The feature definitions can also be loaded in test initialize, or the test class constructor.
+
+```C#
+[TestClass]
+public class MyTestClass
+{
+    public MyTestClass()
+    {
+        ...
+        var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
+        featureDefinitionProvider.Load(FeatureTestMethodAttribute.Features);
+    }
+
+    // or
+    [TestInitialize]
+    public async Task Initialize()
+    {
+        ...
+        var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
+        featureDefinitionProvider.Load(FeatureTestMethodAttribute.Features);
+    }
+
+    [FeatureTestMethod(onOff: "FeatureA")]
+    public void MyTestMethod()
+    {
+        ...
+        var featureService = serviceProvider.GetRequired<IFeatureService>();
+        if (await featureService.IsOn("FeatureA"))
+        {
+            // FeatureA is On asserts
+        }
+        else
+        {
+            // FeatureA is Off asserts
+        }
+    }
+}
+```
+
+Set features On or Off without varying them.
+
+```C#
+[FeatureTestMethod(onOff: "FeatureA", on: "AlwaysOn", off: "AllwaysOn")]
+public void MyTestMethod()
+{
+    ...
+    var featureService = serviceProvider.GetRequired<IFeatureService>();
+
+    Assert.IsTrue(await featureService.IsOn("AlwaysOn"));
+    Assert.IsFalse(await featureService.IsOff("AlwaysOff"));
+
+    if (await featureService.IsOn("FeatureA"))
+    {
+        // FeatureA is On asserts
+    }
+    else
+    {
+        // FeatureA is Off asserts
+    }
+}
+```
+
+### Testing with Feature types
+
+```C#
+[FeatureTestMethod(onOff: "FeatureA")]
+[FeatureTestValue("FeatureA", onValue: "On", offValue: "Off")]
+public void MyTestMethod()
+{
+    ...
+    var featureService = serviceProvider.GetRequired<IFeatureService>();
+    var featureValue = await featureService.GetValue<string>("FeatureA");
+    if (featureValue == "On")
+    {
+        // Feature is On asserts
+    }
+    else if (featureValue == "Off")
+    {
+        // Feature is Off asserts
+    }
+}
+```
+
+The `FeatureTestValueAttribute` defines the on and off values for a feature. It's not necessary to specify the attribute for boolean features as that is assumed to be the default when no `FeatureTestValueAttribute` is defined.
+
+The `FeatureTestMethodAttribute.Features` is an enumerable that contains all feature definitions for the current test invocation with their `IsOn=true/false`.
+
+Use multiple on values.
+In the following example the test is run 3 times. 1x with FeatureA off, 1x with FeatureA set to AB.A and 1x with FeatureA set to AB.B .
+
+```C#
+[FeatureTestMethod(onOff: "FeatureA")]
+[FeatureTestValue("FeatureA", onValues: new object[] { AB.A, AB.B }, offValue: AB.Off)]
+public void MyTestMethod()
+{
+    ...
+    var featureService = serviceProvider.GetRequired<IFeatureService>();
+    var featureValue = await featureService.GetValue<AB>("FeatureA");
+    if (featureValue == AB.Off)
+    {
+        // FeatureA is Off asserts
+    }
+    else if (featureValue == AB.A)
+    {
+        // FeatureA is A asserts
+    }
+    else if (featureValue == AB.B)
+    {
+        // FeatureA is B asserts
+    }
+}
+```
+
+Vary between multiple features and their values.
+In the following example the test will be run 4 times: 2^(#onOffFeatures).
+
+```C#
+[FeatureTestMethod(onOff: "FeatureA,FeatureB")]
+public void MyTestMethod()
+{
+    if (await featureService.IsOn("FeatureA"))
+    {
+        if (await featureService.IsOn("FeatureB"))
+        {
+            // FeatureA is On & Feature B is On asserts
+        }
+        else
+        {
+            // FeatureA is On & Feature B is Off asserts
+        }
+    }
+    else
+    {
+        if (await featureService.IsOn("FeatureB"))
+        {
+            // FeatureA is Off & Feature B is On asserts
+        }
+        else
+        {
+            // FeatureA is Off & Feature B is Off asserts
+        }
+    }
+}
+```
+
+### Testing with feature filters
+
+Define a feature filter with a single configuration
+
+```C#
+[FeatureTestMethod(on: "FeatureA")]
+[FeatureTestFilter("FeatureA", "ParallelChange", ParallelChange.Expanded)];
+public void MyTestMethod()
+{
+    ...
+    Assert.IsTrue(await featureService.IsOn("FeatureA", ParallelChange.Expanded));
+}
+```
+
+Define a feature filter with multiple configurations. The test will be run for each configuration.
+In the following case the test will be run 4 times:
+    1. FeatureA off
+    2. FeatureA on and ParallelChange.Expanded
+    3. FeatureA on and ParallelChange.Migrated
+    4. FeatureA on and ParallelChange.Contracted
+
+```C#
+[FeatureTestMethod(onOff: "FeatureA")]
+[FeatureTestFilter("FeatureA", "ParallelChange", new object[] { ParallelChange.Expanded, ParallelChange.Migrated, ParallelChange.Contracted })]
+public void MyTestMethod()
+{
+    ...
+    if (!await featureService.IsOn("FeatureA", ParallelChange.Contracted)) {
+        // Assert Old_DataWrite();
+    }
+    if (await featureService.IsOn("FeatureA", ParallelChange.Expanded)) {
+        // Assert New_DataWrite();
+    }
+
+    if (await featureService.IsOn("FeatureA", ParallelChange.Migrated)) {
+        // Assert New_UI();
+    } else {
+        // Assert Old_UI();
+    }
+}
+
+```
