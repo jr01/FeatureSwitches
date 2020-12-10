@@ -4,21 +4,21 @@ Switch application features on, off, or to any defined value.
 
 * Conditional feature switch support (boolean)
 
-```C#
-     bool isOn = await featureService.IsOn("feature");
-```
+    ```C#
+    bool isOn = await featureService.IsOn("feature");
+    ```
 
 * Any type can be switched to any value; for example to do A/B testing.
 
-```C#
+    ```C#
     bool isOn = await featureService.GetValue<bool>("feature");
     var myTypedValue = await featureService.GetValue<MyType>("feature");
     if (myTypedValue.Setting == 'A')
         ...
-```
+    ```
 
 * Feature filters and filter groups, allowing for complex rule evaluation.
-* Turn a feature on/off on feature and filter group level. (aka kill-switch)
+* Turn a feature on/off on feature and filter group level. (aka main/kill-switch)
 * Contextual feature evaluation.
   * Via evaluation context parameter: `bool isOn = featureService.IsOn("feature", evaluationContext: "mycontext");`
   * Via evaluation context accessor. `serviceCollection.AddScoped<IEvaluationContextAccessor, MyEvaluationContextAccessor>()`
@@ -38,21 +38,9 @@ Switch application features on, off, or to any defined value.
     * Load feature definitions from JSON
     * Load feature definitions programmatically
 * Dependency Injection framework independent.
-* MSTest run a test multiple times with feature on/off.
+* MSTest attributes - run a unit test multiple times with feature on/off.
 
-## Important
-
-All 1.0.* versions contain breaking changes. From 1.1 semantic versioning will be followed.
-  
 ## Usage
-
-### Registration
-
-```C#
-// dotnet add package FeatureSwitches.ServiceCollection
-
-serviceCollection.AddFeatureSwitches();
-```
 
 ### Basic usage
 
@@ -95,12 +83,48 @@ serviceCollection.AddFeatureSwitches();
 
     _Note: if the feature hasn't been defined false will be returned._
 
+### Dependency registration
+
+When using Microsoft.Extensions.DependencyInjection, e.g. ASP.NET Core, you can use:
+
+```C#
+// dotnet add package FeatureSwitches.ServiceCollection
+
+serviceCollection.AddFeatureSwitches(addScopedCache: true);
+```
+
+Or instead of that NuGet define what you need manually:
+
+```C#
+serviceCollection.AddSingleton<IFeatureFilterMetadata, DateTimeFeatureFilter>();
+serviceCollection.AddScoped<FeatureService>();
+serviceCollection.AddScoped<IFeatureCache, InMemoryFeatureCache>();
+
+serviceCollection.AddSingleton<InMemoryFeatureDefinitionProvider>();
+serviceCollection.AddSingleton<IFeatureDefinitionProvider>(sp => sp.GetRequiredService<InMemoryFeatureDefinitionProvider>());
+serviceCollection.AddSingleton<IFeatureCacheContextAccessor, EmptyFeatureCacheContextAccessor>();
+```
+
+When using Autofac:
+
+```C#
+builder.RegisterType<DateTimeFeatureFilter>().As<IFeatureFilterMetadata>().SingleInstance();
+builder.RegisterType<FeatureService>().As<IFeatureService>().InstancePerLifetimeScope();
+builder.RegisterType<InMemoryFeatureCache>().As<IFeatureCache>().InstancePerLifetimeScope();
+
+builder.RegisterType<InMemoryFeatureDefinitionProvider>()
+    .AsSelf()
+    .As<IFeatureDefinitionProvider>()
+    .SingleInstance();
+```
+
 ### Feature types
 
 * Define a custom feature type
 
     ```C#
-    public enum Direction {
+    public enum Direction
+    {
         Left,
         Right
     }
@@ -111,7 +135,6 @@ serviceCollection.AddFeatureSwitches();
         offValue: Direction.Left,
         onValue: Direction.Right );
     ```
-
 * Usage
 
     ```C#
@@ -160,10 +183,9 @@ serviceCollection.AddFeatureSwitches();
     serviceCollection.AddScoped<IEvaluationContextAccessor, MyScopedEvaluationContextAccessor>();
     ```
 
-### Feature filters and groups
+### Feature filters
 
-Feature rules define when a feature should be on or off.
-A feature is on when all applied feature filters decide that the feature should be on (logical AND).
+A feature is on when it is set to on and all applied feature filters decide that the feature should be on (logical AND).
 
 * Scoped feature filters
 
@@ -214,9 +236,12 @@ A feature is on when all applied feature filters decide that the feature should 
 
 * Feature filter groups
 
-    A feature is on when the first filter group decides the feature should be on.
-    A feature filter group has one or more feature filters.
-    Each filter group defines it's `OnValue` and `isOn`.
+    A feature is on when it is set to on and the first applied filter groups decides that the feature should indeed be on  (Logical OR).
+    The feature's `OnValue` is taken from that filter group.
+
+    Feature filters can be applied to a feature filter group.
+
+    As an example we define a feature with 2 filter groups: group A and group B. Users in group A (John) should always get the feature. Users in group B (Jane) should get the feature from a certain launch date.
 
     ```C#
     public enum AB
@@ -290,14 +315,14 @@ Assert.IsTrue(await featureService.IsOn("MyBoolFeature", new MyAppContext { Name
 
 ### ParallelChange pattern aka Expand/Migrate/Contract
 
-Out of the box the library ships with a ParallelChange contextual feature filter. This filter can be added to any feature.
+The ParallelChange contextual feature filter can be applied to any feature or feature filter group.
 
 * Define the feature
 
     ```C#
-        var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
-        featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
-        featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "\"Expanded\"");
+    var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
+    featureDefinitionProvider.SetFeature("MyBoolFeature", isOn: true);
+    featureDatabase.SetFeatureFilter("FeatureA", "ParallelChange", "\"Expanded\"");
     ```
 
 * When writing data
@@ -311,7 +336,7 @@ Out of the box the library ships with a ParallelChange contextual feature filter
     }
     ```
 
-* When checking from UI if the feature can be used
+* When checking in the UI if the feature is on
 
     ```C#
     if (await featureService.IsOn("feature", ParallelChange.Migrated)) {
@@ -331,7 +356,9 @@ Out of the box the library ships with a ParallelChange contextual feature filter
     }
     ```
 
-## Loading from JSON
+## Loading features from JSON
+
+The `InMemoryFeatureDefinitionProvider` supports loading features from a JSON file.
 
 ```json
 [
@@ -388,11 +415,196 @@ using (var fs = File.OpenRead("features.json"))
 }
 ```
 
+## Loading features from a database and a UI to modify definitions
+
+There are many different databases, dataaccess layers, UI frameworks and that's why this library doesn't come with any of those.
+
+To give some direction for an Entity Framework + SQL setup. A SQL schema might look roughly like:
+
+```sql
+CREATE TABLE [Features] (
+    [Id] uniqueidentifier NOT NULL,
+    [Name] nvarchar(50) NOT NULL,
+    [Description] nvarchar(200) NOT NULL,
+    [Type] nvarchar(50) NOT NULL,
+    [OffValue] varbinary(100) NOT NULL,
+    [IsOn] bit NOT NULL,
+    [OnValue] varbinary(100) NOT NULL
+);
+
+CREATE TABLE [FeatureFilterGroups] (
+    [Id] uniqueidentifier NOT NULL,
+    [FeatureId] uniqueidentifier NOT NULL,
+    [Name] nvarchar(50) NOT NULL,
+    [IsOn] bit NOT NULL,
+    [OnValue] varbinary(100) NOT NULL
+);
+
+CREATE TABLE [FeatureFilters] (    
+    [Id] uniqueidentifier NOT NULL,
+    [FeatureId] uniqueidentifier NOT NULL,
+    [GroupId] uniqueidentifier NULL,
+    [Type] nvarchar(50) NOT NULL,
+    [Settings] varbinary(max) NOT NULL,
+);
+```
+
+Of course you should define primary keys, foreign key relations, any indexes and more columns depending on your requirements.
+
+Entities are similar to the tables:
+
+```c#
+public class Feature
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    public IList<ApplicationFeatureFilter> Filters { get; private set; } = new List<ApplicationFeatureFilter>();
+
+    public IList<ApplicationFeatureFilterGroup> Groups { get; private set; } = new List<ApplicationFeatureFilterGroup>();
+    ...
+}
+
+...
+public void Configure(EntityTypeBuilder<Feature> builder)
+{
+    builder.HasMany(x => x.Filters)
+        .WithOne(x => x.Feature)
+        .IsRequired(false)
+        .HasForeignKey(x => x.FeatureId);
+
+    builder.HasMany(x => x.Groups)
+        .WithOne(x => x.Feature)
+        .IsRequired(false)
+        .HasForeignKey(x => x.FeatureId);
+}
+```
+
+A provider:
+
+```C#
+
+public class DatabaseFeatureDefinitionProvider : IFeatureDefinitionProvider
+{
+    private readonly DbContext dbContext;
+
+    public DatabaseFeatureDefinitionProvider(DbContext dbContext)
+    {
+        this.dbContext = dbContext;
+    }
+
+    public async Task<string[]> GetFeatures(CancellationToken cancellationToken = default)
+    {
+        var features = await this.dbContext.ApplicationFeatures
+            .OrderBy(x => x.Name)
+            .Select(x => x.Name)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return features;
+    }
+
+    public async Task<FeatureDefinition?> GetFeatureDefinition(string feature, CancellationToken cancellationToken = default)
+    {
+        var applicationFeature = await this.dbContext.ApplicationFeatures
+            .Select(x => new
+            {
+                x.Name,
+                x.IsOn,
+                x.OnValue,
+                x.OffValue,
+                Filters = x.Filters.Select(f => new
+                {
+                    f.Type,
+                    f.Settings,
+                    f.GroupId
+                }).ToList(),
+                Groups = x.Groups.Select(g => new
+                {
+                    g.Id,
+                    g.Name,
+                    g.IsOn,
+                    g.OnValue
+                }).ToList()
+            })
+            .Where(x => x.Name == feature)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        
+        if (applicationFeature == null)
+        {
+            return null;
+        }
+
+        var featureDefinition = new FeatureDefinition
+        {
+            Name = applicationFeature.Name,
+            OffValue = JsonSerializer.Deserialize<object?>(applicationFeature.OffValue),
+            IsOn = applicationFeature.IsOn,
+            OnValue = JsonSerializer.Deserialize<object?>(applicationFeature.OnValue)
+        };
+
+        var groups = new Dictionary<Guid, string>();
+        foreach (var group in applicationFeature.Groups)
+        {
+            featureDefinition.FilterGroups.Add(new FeatureFilterGroupDefinition
+            {
+                OnValue = JsonSerializer.Deserialize<object?>(group.OnValue),
+                Name = group.Name,
+                IsOn = group.IsOn
+            });
+
+            groups.Add(group.Id, group.Name);
+        }
+
+        foreach (var filter in applicationFeature.Filters)
+        {
+            featureDefinition.Filters.Add(new FeatureFilterDefinition
+            {
+                Group = filter.GroupId == null ? null : groups[filter.GroupId.Value],
+                Name = filter.Type,
+                Settings = JsonSerializer.Deserialize<object?>(filter.Settings)
+            });
+        }
+
+        return featureDefinition;
+    }
+}
+```
+
+Be aware that each `await featureService.IsOn(feature)` call will, if the feature evaluation is not cached, invoke the `DatabaseFeatureDefinitionProvider.GetFeatureDefinition(` and query the database.
+
+It depends on your specific setup if that is acceptable or if you need any caching. Caching can be done using the feature evaluation caching system, or you could cache the query results within the `DatabaseFeatureDefinitionProvider` in for example Redis.
+
+## Caching feature evalutions and stable feature evalution results
+
+Caching is a complex topic. What you need all depends on your requirements (business, performance, etc) and application setup.
+
+The `InMemoryFeatureCache` uses a simple ConcurrenctDictionary and typically is registered with a scoped lifetime. Any subsequent calls to `await featureService.IsOn(feature)` within the dependency scope will deliver the cached result. This can be perfect for an http request handler (e.g. ASP.Net controller) where you want both performance and a stable feature evaluation result during the request.
+
+### Distributed computing
+
+In a distributed application setup you might have multiple instances serving requests and one instance could evaluate the feature to be on (for example a time activated feature), while at the same time another instance could evaluate the feature to be off. This might, or might not be acceptable, it all depends on your requirements.
+
+If this is not acceptable you probably need a distributed cache like Redis. Since there are many cache subtleties (TTL on cached entries, Redis 6 client-caching yes or no, cache invalidation) implementing an `IFeatureCache` is up to you.
+
+```C#
+serviceCollection.AddScoped<IFeatureCache, YourRedisFeatureCache>();
+```
+
+You can also setup Redis as a 2nd level feature evaluation cache:
+
+```C#
+serviceCollection.AddScoped<IFeatureCache, InMemoryFeatureCache>();
+serviceCollection.AddScoped<IFeatureCache, YourRedisFeatureCache>();
+```
+
 ## FeatureSwitches.MSTest
 
 The `FeatureSwitches.MSTest` nuget delivers functionality to run a test multiple times for all defined feature On/Off combinations.
 
-Run the same test twice with feature On and Off.
+Run the same test twice with feature On and Off:
 
 ```C#
 [FeatureTestMethod(onOff: "FeatureA")]
@@ -561,7 +773,7 @@ public void MyTestMethod()
 }
 ```
 
-### Testing with feature filters
+### Testing with feature filters (future work: not yet implemented)
 
 Define a feature filter with a single configuration
 

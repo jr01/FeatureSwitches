@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using FeatureSwitches.Definitions;
+using FeatureSwitches.Filters;
 using FeatureSwitches.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,7 +13,6 @@ namespace FeatureSwitches.Test.MSTest
     public class FeatureTestMethodAttributeTest
     {
         [TestMethod]
-        [FeatureTestFilter("A", "B", new object[] { FeatureSwitches.Filters.ParallelChange.Expanded })]
         public void Single_feature_on_off()
         {
             var attr = new FeatureTestMethodAttribute(onOff: "A");
@@ -108,7 +108,7 @@ namespace FeatureSwitches.Test.MSTest
 
             var testData = new FeatureTestValueAttribute("A", onValue: "On", offValue: "Off");
 
-            var testMethod = new MockTestMethod(new List<FeatureTestValueAttribute> { testData });
+            var testMethod = new MockTestMethod(new () { testData });
             attr.Execute(testMethod);
 
             Assert.AreEqual(2, testMethod.Executions.Count);
@@ -126,7 +126,7 @@ namespace FeatureSwitches.Test.MSTest
 
             var testData = new FeatureTestValueAttribute("A", onValues: new object[] { "On1", "On2" }, offValue: "Off");
 
-            var testMethod = new MockTestMethod(new List<FeatureTestValueAttribute> { testData });
+            var testMethod = new MockTestMethod(new () { testData });
             attr.Execute(testMethod);
 
             Assert.AreEqual(3, testMethod.Executions.Count);
@@ -146,16 +146,16 @@ namespace FeatureSwitches.Test.MSTest
 
         public class MockTestMethod : ITestMethod
         {
-            private readonly List<FeatureTestValueAttribute> testValuesAttributes;
+            private readonly List<Attribute> testAttributes;
 
             public MockTestMethod()
                 : this(new ())
             {
             }
 
-            public MockTestMethod(List<FeatureTestValueAttribute> testValuesAttributes)
+            public MockTestMethod(List<Attribute> testAttributes)
             {
-                this.testValuesAttributes = testValuesAttributes;
+                this.testAttributes = testAttributes;
             }
 
             public List<MockTestMethodExecution> Executions { get; } = new ();
@@ -180,12 +180,7 @@ namespace FeatureSwitches.Test.MSTest
             public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
                 where TAttributeType : Attribute
             {
-                if (typeof(TAttributeType) == typeof(FeatureTestValueAttribute))
-                {
-                    return this.testValuesAttributes.Cast<TAttributeType>().ToArray();
-                }
-
-                return Array.Empty<TAttributeType>();
+                return this.testAttributes.OfType<TAttributeType>().ToArray();
             }
 
             public TestResult Invoke(object[] arguments)
