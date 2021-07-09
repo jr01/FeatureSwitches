@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -11,6 +12,8 @@ using FeatureSwitches.Definitions;
 using FeatureSwitches.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[assembly: CLSCompliant(true)]
 
 namespace FeatureSwitches.Test.IntegrationTest
 {
@@ -496,10 +499,7 @@ namespace FeatureSwitches.Test.IntegrationTest
             [JsonPropertyName("Color")]
             public string BackColorAsArgb
             {
-                get
-                {
-                    return this.Color.IsNamedColor ? this.Color.Name : this.Color.ToArgb().ToString(CultureInfo.InvariantCulture);
-                }
+                get => this.Color.IsNamedColor ? this.Color.Name : this.Color.ToArgb().ToString(CultureInfo.InvariantCulture);
 
                 set
                 {

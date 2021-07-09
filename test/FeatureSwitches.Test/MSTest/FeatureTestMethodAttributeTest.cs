@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using FeatureSwitches.Definitions;
-using FeatureSwitches.Filters;
 using FeatureSwitches.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -108,7 +107,7 @@ namespace FeatureSwitches.Test.MSTest
 
             var testData = new FeatureTestValueAttribute("A", onValue: "On", offValue: "Off");
 
-            var testMethod = new MockTestMethod(new () { testData });
+            var testMethod = new MockTestMethod(new List<Attribute> { testData });
             attr.Execute(testMethod);
 
             Assert.AreEqual(2, testMethod.Executions.Count);
@@ -126,7 +125,7 @@ namespace FeatureSwitches.Test.MSTest
 
             var testData = new FeatureTestValueAttribute("A", onValues: new object[] { "On1", "On2" }, offValue: "Off");
 
-            var testMethod = new MockTestMethod(new () { testData });
+            var testMethod = new MockTestMethod(new List<Attribute> { testData });
             attr.Execute(testMethod);
 
             Assert.AreEqual(3, testMethod.Executions.Count);
@@ -146,19 +145,19 @@ namespace FeatureSwitches.Test.MSTest
 
         public class MockTestMethod : ITestMethod
         {
-            private readonly List<Attribute> testAttributes;
+            private readonly IList<Attribute> testAttributes;
 
             public MockTestMethod()
-                : this(new ())
+                : this(new List<Attribute>())
             {
             }
 
-            public MockTestMethod(List<Attribute> testAttributes)
+            public MockTestMethod(IList<Attribute> testAttributes)
             {
                 this.testAttributes = testAttributes;
             }
 
-            public List<MockTestMethodExecution> Executions { get; } = new ();
+            public IList<MockTestMethodExecution> Executions { get; } = new List<MockTestMethodExecution>();
 
             public string TestMethodName => throw new InvalidOperationException();
 

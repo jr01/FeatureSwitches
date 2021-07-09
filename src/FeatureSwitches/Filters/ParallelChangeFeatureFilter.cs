@@ -16,12 +16,12 @@ namespace FeatureSwitches.Filters
                 ParallelChange.Expanded =>
                     evaluationContext == ParallelChange.Expanded,
                 ParallelChange.Migrated =>
-                    evaluationContext == ParallelChange.Expanded ||
-                    evaluationContext == ParallelChange.Migrated,
+                    evaluationContext is ParallelChange.Expanded or
+                    ParallelChange.Migrated,
                 ParallelChange.Contracted =>
-                    evaluationContext == ParallelChange.Expanded ||
-                    evaluationContext == ParallelChange.Migrated ||
-                    evaluationContext == ParallelChange.Contracted,
+                    evaluationContext is ParallelChange.Expanded or
+                    ParallelChange.Migrated or
+                    ParallelChange.Contracted,
                 _ => throw new InvalidOperationException(),
             };
 

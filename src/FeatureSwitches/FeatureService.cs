@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using FeatureSwitches.Caching;
 using FeatureSwitches.Definitions;
 using FeatureSwitches.Filters;
+
+[assembly: CLSCompliant(true)]
 
 namespace FeatureSwitches
 {
@@ -35,14 +37,20 @@ namespace FeatureSwitches
             this.featureContextProvider = featureContextProvider;
         }
 
-        public Task<bool> IsOn(string feature, CancellationToken cancellationToken = default) =>
-            this.GetValue<bool>(feature, cancellationToken);
+        public Task<bool> IsOn(string feature, CancellationToken cancellationToken = default)
+        {
+            return this.GetValue<bool>(feature, cancellationToken);
+        }
 
-        public Task<bool> IsOn<TEvaluationContext>(string feature, TEvaluationContext? evaluationContext, CancellationToken cancellationToken = default) =>
-            this.GetValue<bool, TEvaluationContext>(feature, evaluationContext, cancellationToken);
+        public Task<bool> IsOn<TEvaluationContext>(string feature, TEvaluationContext? evaluationContext, CancellationToken cancellationToken = default)
+        {
+            return this.GetValue<bool, TEvaluationContext>(feature, evaluationContext, cancellationToken);
+        }
 
-        public Task<TFeatureType?> GetValue<TFeatureType>(string feature, CancellationToken cancellationToken = default) =>
-            this.GetValue<TFeatureType, object>(feature, null, cancellationToken);
+        public Task<TFeatureType?> GetValue<TFeatureType>(string feature, CancellationToken cancellationToken = default)
+        {
+            return this.GetValue<TFeatureType?, object>(feature, null, cancellationToken);
+        }
 
         public async Task<TFeatureType?> GetValue<TFeatureType, TEvaluationContext>(
             string feature,
@@ -52,18 +60,20 @@ namespace FeatureSwitches
             var bytes = await this.GetBytes(feature, evaluationContext, cancellationToken).ConfigureAwait(false);
             if (bytes is null)
             {
-                return default!;
+                return default;
             }
 
-            return JsonSerializer.Deserialize<TFeatureType?>(bytes);
+            return JsonSerializer.Deserialize<TFeatureType>(bytes);
         }
 
-        public Task<byte[]?> GetBytes(string feature, CancellationToken cancellationToken = default) =>
-            this.GetBytes<object>(feature, null!, cancellationToken);
+        public Task<byte[]?> GetBytes(string feature, CancellationToken cancellationToken = default)
+        {
+            return this.GetBytes<object>(feature, null!, cancellationToken);
+        }
 
         public async Task<byte[]?> GetBytes<TEvaluationContext>(
             string feature,
-            TEvaluationContext evaluationContext,
+            TEvaluationContext? evaluationContext,
             CancellationToken cancellationToken = default)
         {
             var cacheContext = this.GetCacheContext(evaluationContext);
@@ -109,7 +119,7 @@ namespace FeatureSwitches
             };
         }
 
-        private string GetCacheContext<TEvaluationContext>(TEvaluationContext evaluationContext)
+        private string GetCacheContext<TEvaluationContext>(TEvaluationContext? evaluationContext)
         {
             var exec = this.featureContextProvider.GetContext();
             if (exec is null && evaluationContext is null)
@@ -132,7 +142,7 @@ namespace FeatureSwitches
 
         private async Task<EvaluationResult?> GetSwitchValue<TEvaluationContext>(
             string feature,
-            TEvaluationContext evaluationContext,
+            TEvaluationContext? evaluationContext,
             CancellationToken cancellationToken)
         {
             var featureDefinition = await this.featureDefinitionProvider.GetFeatureDefinition(feature, cancellationToken).ConfigureAwait(false);
@@ -141,11 +151,14 @@ namespace FeatureSwitches
                 return null;
             }
 
-            Task<bool> EvaluateGroupFilters(string? group) => this.EvaluateFilters(
-                feature,
-                featureDefinition.Filters.Where(x => x.Group == group),
-                evaluationContext,
-                cancellationToken);
+            Task<bool> EvaluateGroupFilters(string? group)
+            {
+                return this.EvaluateFilters(
+                    feature,
+                    featureDefinition.Filters.Where(x => x.Group == group),
+                    evaluationContext,
+                    cancellationToken);
+            }
 
             EvaluationResult evalutionResult = new ()
             {

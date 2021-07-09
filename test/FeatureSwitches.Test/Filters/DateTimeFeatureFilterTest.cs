@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Text.Json;
 using System.Threading.Tasks;
 using FeatureSwitches.Filters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

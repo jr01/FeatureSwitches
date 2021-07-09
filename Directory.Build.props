@@ -9,6 +9,8 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>CS8600;CS8602;CS8603</WarningsAsErrors>
         <WarningsNotAsErrors></WarningsNotAsErrors>
+        <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+		    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
       <!-- 
           [CA1062: Validate arguments of public methods]
           Reason:

@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FeatureSwitches
@@ -39,7 +39,7 @@ namespace FeatureSwitches
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <typeparam name="TFeatureType">The feature type.</typeparam>
         /// <returns>The current switch value, or a default value if the feature doesn't exist.</returns>
-        Task<TFeatureType> GetValue<TFeatureType>(string feature, CancellationToken cancellationToken = default);
+        Task<TFeatureType?> GetValue<TFeatureType>(string feature, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the current value of the featureswitch within the specified evaluation context.
@@ -52,7 +52,7 @@ namespace FeatureSwitches
         /// <typeparam name="TFeatureType">The feature type.</typeparam>
         /// <typeparam name="TEvaluationContext">The evaluation context type.</typeparam>
         /// <returns>The current switch value, or a default value if the feature doesn't exist.</returns>
-        Task<TFeatureType> GetValue<TFeatureType, TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
+        Task<TFeatureType?> GetValue<TFeatureType, TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the current value of the featureswitch as a byte array.

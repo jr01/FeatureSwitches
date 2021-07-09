@@ -72,8 +72,10 @@ namespace FeatureSwitches.Definitions
         /// </summary>
         /// <param name="feature">The feature.</param>
         /// <param name="isOn">If the feature should be on or off, on by default.</param>
-        public void SetFeature(string feature, bool isOn = true) =>
-            this.SetFeature<bool>(feature, isOn: isOn, offValue: false, onValue: true);
+        public void SetFeature(string feature, bool isOn = true)
+        {
+            this.SetFeature(feature, isOn: isOn, offValue: false, onValue: true);
+        }
 
         /// <summary>
         /// Adds a new definition for a typed feature.
@@ -83,7 +85,7 @@ namespace FeatureSwitches.Definitions
         /// <param name="isOn">If the feature should be on or off, on by default.</param>
         /// <param name="offValue">The value to return when the feature is off.</param>
         /// <param name="onValue">The value to return when the feature is on and no feature groups have been defined.</param>
-        public void SetFeature<TFeatureType>(string feature, bool isOn = true, TFeatureType offValue = default, TFeatureType onValue = default)
+        public void SetFeature<TFeatureType>(string feature, bool isOn = true, TFeatureType? offValue = default, TFeatureType? onValue = default)
         {
             this.featureSwitches[feature] = new ()
             {
@@ -115,8 +117,10 @@ namespace FeatureSwitches.Definitions
         /// <param name="feature">The feature name.</param>
         /// <param name="group">The group name.</param>
         /// <param name="isOn">If the feature filter group should be on or off, on by default.</param>
-        public void SetFeatureGroup(string feature, string group, bool isOn = true) =>
-            this.SetFeatureGroup<bool>(feature, group, isOn: isOn, onValue: true);
+        public void SetFeatureGroup(string feature, string group, bool isOn = true)
+        {
+            this.SetFeatureGroup(feature, group, isOn: isOn, onValue: true);
+        }
 
         /// <summary>
         /// Defines a new feature filter group for a typed feature.
@@ -126,7 +130,7 @@ namespace FeatureSwitches.Definitions
         /// <param name="group">The feature filter group.</param>
         /// <param name="isOn">If the feature filter group should be on or off, on by default.</param>
         /// <param name="onValue">The value to return when the feature is on and the group matches.</param>
-        public void SetFeatureGroup<TFeatureType>(string feature, string group, bool isOn = true, TFeatureType onValue = default)
+        public void SetFeatureGroup<TFeatureType>(string feature, string group, bool isOn = true, TFeatureType? onValue = default)
         {
             if (!this.featureSwitches.TryGetValue(feature, out var definition))
             {
@@ -205,12 +209,18 @@ namespace FeatureSwitches.Definitions
         /// Save the features.
         /// </summary>
         /// <returns>A list of feature definitions.</returns>
-        public IList<FeatureDefinition> Save() => this.featureSwitches.Values.ToList();
+        public IList<FeatureDefinition> Save()
+        {
+            return this.featureSwitches.Values.ToList();
+        }
 
         /// <summary>
         /// Save the feature definitions into pretty JSON format.
         /// </summary>
         /// <returns>A JSON formatted string.</returns>
-        public string SaveToJson() => JsonSerializer.Serialize(this.Save(), new JsonSerializerOptions { WriteIndented = true });
+        public string SaveToJson()
+        {
+            return JsonSerializer.Serialize(this.Save(), new JsonSerializerOptions { WriteIndented = true });
+        }
     }
 }

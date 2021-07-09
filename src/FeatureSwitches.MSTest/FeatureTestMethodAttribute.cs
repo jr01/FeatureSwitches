@@ -5,12 +5,14 @@ using System.Threading;
 using FeatureSwitches.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+[assembly: CLSCompliant(true)]
+
 namespace FeatureSwitches.MSTest
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class FeatureTestMethodAttribute : TestMethodAttribute
+    public sealed class FeatureTestMethodAttribute : TestMethodAttribute
     {
-        private static readonly AsyncLocal<IEnumerable<FeatureDefinition>> AsyncLocalFeatures = new AsyncLocal<IEnumerable<FeatureDefinition>>();
+        private static readonly AsyncLocal<IEnumerable<FeatureDefinition>> AsyncLocalFeatures = new ();
 
         private readonly string[] onOff;
 
@@ -24,7 +26,9 @@ namespace FeatureSwitches.MSTest
         /// <param name="onOff">A comma separated string of features to vary between on/off.</param>
         /// <param name="on">A comma separated string of features that are always on.</param>
         /// <param name="off">A comma separated string of features that are always off.</param>
+#pragma warning disable CA1019 // Define accessors for attribute arguments
         public FeatureTestMethodAttribute(string? onOff, string? on = null, string? off = null)
+#pragma warning restore CA1019 // Define accessors for attribute arguments
         {
             static string[] Convert(string? arg)
             {

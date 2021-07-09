@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using FeatureSwitches.Caching;
 using FeatureSwitches.Definitions;
 using FeatureSwitches.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+
+[assembly: CLSCompliant(true)]
 
 namespace FeatureSwitches
 {
