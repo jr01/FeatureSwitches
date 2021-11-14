@@ -13,11 +13,7 @@
 
         <!-- https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview -->
         <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-
-        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-        <RestoreLockedMode>true</RestoreLockedMode>
-        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+		    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
       <!-- 
           [CA1062: Validate arguments of public methods]
           Reason:
