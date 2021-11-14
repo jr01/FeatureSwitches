@@ -1,47 +1,42 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace FeatureSwitches.Filters;
 
-namespace FeatureSwitches.Filters
+public class DateTimeFeatureFilter : IFeatureFilter
 {
-    public class DateTimeFeatureFilter : IFeatureFilter
+    private readonly Func<DateTimeOffset> dateTimeResolver;
+
+    public DateTimeFeatureFilter()
+        : this(() => DateTimeOffset.UtcNow)
     {
-        private readonly Func<DateTimeOffset> dateTimeResolver;
+    }
 
-        public DateTimeFeatureFilter()
-            : this(() => DateTimeOffset.UtcNow)
+    public DateTimeFeatureFilter(Func<DateTimeOffset> dateTimeResolver)
+    {
+        this.dateTimeResolver = dateTimeResolver;
+    }
+
+    public string Name => "DateTime";
+
+    public Task<bool> IsOn(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
+    {
+        var now = this.dateTimeResolver();
+
+        var settings = context.GetSettings<DateTimeFeatureFilterSettings>();
+        if (settings is null)
         {
+            throw new InvalidOperationException("Invalid settings.");
         }
 
-        public DateTimeFeatureFilter(Func<DateTimeOffset> dateTimeResolver)
+        var isOn = true;
+        if (settings.From.HasValue && now < settings.From)
         {
-            this.dateTimeResolver = dateTimeResolver;
+            isOn = false;
         }
 
-        public string Name => "DateTime";
-
-        public Task<bool> IsOn(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
+        if (settings.To.HasValue && now > settings.To)
         {
-            var now = this.dateTimeResolver();
-
-            var settings = context.GetSettings<DateTimeFeatureFilterSettings>();
-            if (settings is null)
-            {
-                throw new InvalidOperationException("Invalid settings.");
-            }
-
-            var isOn = true;
-            if (settings.From.HasValue && now < settings.From)
-            {
-                isOn = false;
-            }
-
-            if (settings.To.HasValue && now > settings.To)
-            {
-                isOn = false;
-            }
-
-            return Task.FromResult(isOn);
+            isOn = false;
         }
+
+        return Task.FromResult(isOn);
     }
 }

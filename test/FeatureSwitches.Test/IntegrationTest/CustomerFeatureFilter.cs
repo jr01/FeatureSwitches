@@ -1,39 +1,36 @@
 ﻿using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using FeatureSwitches.Filters;
 
-namespace FeatureSwitches.Test.IntegrationTest
+namespace FeatureSwitches.Test.IntegrationTest;
+
+public class CustomerFeatureFilter : IFeatureFilter
 {
-    public class CustomerFeatureFilter : IFeatureFilter
+    private readonly CurrentCustomer currentCustomer;
+
+    public CustomerFeatureFilter(CurrentCustomer currentCustomer)
     {
-        private readonly CurrentCustomer currentCustomer;
+        this.currentCustomer = currentCustomer;
+    }
 
-        public CustomerFeatureFilter(CurrentCustomer currentCustomer)
+    public string Name => "Customer";
+
+    public Task<bool> IsOn(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
+    {
+        var settings = context.GetSettings<CustomerFeatureFilterSettings>();
+
+        var name = this.currentCustomer.Name ?? GetCurrentCustomer();
+        if (name is null)
         {
-            this.currentCustomer = currentCustomer;
+            return Task.FromResult(false);
         }
 
-        public string Name => "Customer";
+        var isOn = settings?.Customers.Contains(name) ?? false;
+        return Task.FromResult(isOn);
+    }
 
-        public Task<bool> IsOn(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
-        {
-            var settings = context.GetSettings<CustomerFeatureFilterSettings>();
-
-            var name = this.currentCustomer.Name ?? GetCurrentCustomer();
-            if (name is null)
-            {
-                return Task.FromResult(false);
-            }
-
-            var isOn = settings?.Customers.Contains(name) ?? false;
-            return Task.FromResult(isOn);
-        }
-
-        private static string? GetCurrentCustomer()
-        {
-            var identity = Thread.CurrentPrincipal?.Identity as ClaimsIdentity;
-            return identity?.Name;
-        }
+    private static string? GetCurrentCustomer()
+    {
+        var identity = Thread.CurrentPrincipal?.Identity as ClaimsIdentity;
+        return identity?.Name;
     }
 }

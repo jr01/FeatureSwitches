@@ -1,7 +1,6 @@
-﻿namespace FeatureSwitches.Filters
+﻿namespace FeatureSwitches.Filters;
+
+public interface IFeatureFilterMetadata
 {
-    public interface IFeatureFilterMetadata
-    {
-        string Name { get; }
-    }
+    string Name { get; }
 }

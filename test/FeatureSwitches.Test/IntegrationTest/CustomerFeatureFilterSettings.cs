@@ -1,9 +1,6 @@
-using System.Collections.Generic;
+﻿namespace FeatureSwitches.Test.IntegrationTest;
 
-namespace FeatureSwitches.Test.IntegrationTest
+public class CustomerFeatureFilterSettings
 {
-    public class CustomerFeatureFilterSettings
-    {
-        public HashSet<string> Customers { get; set; } = null!;
-    }
+    public HashSet<string> Customers { get; set; } = null!;
 }

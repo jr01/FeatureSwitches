@@ -1,10 +1,9 @@
-﻿namespace FeatureSwitches.Caching
+﻿namespace FeatureSwitches.Caching;
+
+public class EmptyFeatureCacheContextAccessor : IFeatureCacheContextAccessor
 {
-    public class EmptyFeatureCacheContextAccessor : IFeatureCacheContextAccessor
+    public object? GetContext()
     {
-        public object? GetContext()
-        {
-            return null;
-        }
+        return null;
     }
 }

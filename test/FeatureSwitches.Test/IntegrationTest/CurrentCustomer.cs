@@ -1,7 +1,6 @@
-﻿namespace FeatureSwitches.Test.IntegrationTest
+﻿namespace FeatureSwitches.Test.IntegrationTest;
+
+public class CurrentCustomer
 {
-    public class CurrentCustomer
-    {
-        public string Name { get; set; } = null!;
-    }
+    public string Name { get; set; } = null!;
 }

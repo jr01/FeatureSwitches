@@ -1,11 +1,8 @@
-﻿using System;
+﻿namespace FeatureSwitches.Filters;
 
-namespace FeatureSwitches.Filters
+public class DateTimeFeatureFilterSettings
 {
-    public class DateTimeFeatureFilterSettings
-    {
-        public DateTimeOffset? From { get; set; }
+    public DateTimeOffset? From { get; set; }
 
-        public DateTimeOffset? To { get; set; }
-    }
+    public DateTimeOffset? To { get; set; }
 }

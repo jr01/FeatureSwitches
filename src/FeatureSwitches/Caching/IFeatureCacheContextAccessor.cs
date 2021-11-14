@@ -1,7 +1,6 @@
-﻿namespace FeatureSwitches.Caching
+﻿namespace FeatureSwitches.Caching;
+
+public interface IFeatureCacheContextAccessor
 {
-    public interface IFeatureCacheContextAccessor
-    {
-        object? GetContext();
-    }
+    object? GetContext();
 }

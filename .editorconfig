@@ -13,7 +13,7 @@ indent_style = space
 tab_width = 4
 
 # New line preferences
-insert_final_newline = false
+insert_final_newline =true
 
 #### .NET Coding Conventions ####
 
@@ -129,7 +129,6 @@ dotnet_diagnostic.IDE0008.severity = silent # Use explicit type instead of 'var'
 dotnet_diagnostic.IDE0010.severity = silent # Populate switch with all cases.
 dotnet_diagnostic.IDE0045.severity = silent # 'if' statement can be simplified.
 dotnet_diagnostic.IDE0046.severity = silent # 'if' statement can be simplified.
-dotnet_diagnostic.IDE0055.severity = silent # Fix formatting -- (1) new() => SA1000, but new () => IDE0055   (2) test()! => SA1009, test() ! => IDE0055
 dotnet_diagnostic.IDE0058.severity = silent # Expression value is never used. -- _ = await Something() everywhere ...
 dotnet_diagnostic.IDE0072.severity = silent # Populate switch expression with all cases.
 
@@ -176,3 +175,5 @@ csharp_space_between_square_brackets = false
 csharp_preserve_single_line_statements = true
 csharp_preserve_single_line_blocks = true
 csharp_using_directive_placement = outside_namespace
+dotnet_diagnostic.IDE0160.severity=silent
+dotnet_diagnostic.IDE0161.severity=warning

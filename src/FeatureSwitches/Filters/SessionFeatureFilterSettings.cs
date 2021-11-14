@@ -1,9 +1,6 @@
-﻿using System;
+﻿namespace FeatureSwitches.Filters;
 
-namespace FeatureSwitches.Filters
+public class SessionFeatureFilterSettings
 {
-    public class SessionFeatureFilterSettings
-    {
-        public DateTimeOffset From { get; set; }
-    }
+    public DateTimeOffset From { get; set; }
 }

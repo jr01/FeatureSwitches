@@ -4,13 +4,20 @@
       <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
     <PropertyGroup>
-        <LangVersion>9.0</LangVersion>
+        <LangVersion>10.0</LangVersion>
         <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>CS8600;CS8602;CS8603</WarningsAsErrors>
         <WarningsNotAsErrors></WarningsNotAsErrors>
+
+        <!-- https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview -->
         <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-		    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <RestoreLockedMode>true</RestoreLockedMode>
+        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
       <!-- 
           [CA1062: Validate arguments of public methods]
           Reason:

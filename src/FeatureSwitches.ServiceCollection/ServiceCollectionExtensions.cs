@@ -1,5 +1,4 @@
-using System;
-using FeatureSwitches.Caching;
+﻿using FeatureSwitches.Caching;
 using FeatureSwitches.Definitions;
 using FeatureSwitches.Filters;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,7 +6,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 [assembly: CLSCompliant(true)]
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace FeatureSwitches
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 {
     public static class ServiceCollectionExtensions
     {

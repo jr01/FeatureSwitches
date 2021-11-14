@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30611.23
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeatureSwitches.Test", "test\FeatureSwitches.Test\FeatureSwitches.Test.csproj", "{C4D0812B-92B3-4578-8B0A-6A289E83C8DD}"
 EndProject
@@ -9,9 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeatureSwitches", "src\Feat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeatureSwitches.ServiceCollection", "src\FeatureSwitches.ServiceCollection\FeatureSwitches.ServiceCollection.csproj", "{AA6A9E05-C689-4A66-BCB5-AE4C3267FE4D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B741AA33-8E98-483C-9AFA-9DB8E8E746F7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureSwitches.MSTest", "src\FeatureSwitches.MSTest\FeatureSwitches.MSTest.csproj", "{7814BA68-B2B9-461F-9705-671E5B439759}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeatureSwitches.MSTest", "src\FeatureSwitches.MSTest\FeatureSwitches.MSTest.csproj", "{7814BA68-B2B9-461F-9705-671E5B439759}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,8 +39,5 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7BF65E2F-4824-4C01-8E18-0274215AB790}
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{7814BA68-B2B9-461F-9705-671E5B439759} = {B741AA33-8E98-483C-9AFA-9DB8E8E746F7}
 	EndGlobalSection
 EndGlobal

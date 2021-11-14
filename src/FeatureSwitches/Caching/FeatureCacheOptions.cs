@@ -1,9 +1,6 @@
-﻿using System;
+﻿namespace FeatureSwitches.Caching;
 
-namespace FeatureSwitches.Caching
+public class FeatureCacheOptions
 {
-    public class FeatureCacheOptions
-    {
-        public DateTimeOffset? AbsoluteExpiration { get; set; }
-    }
+    public DateTimeOffset? AbsoluteExpiration { get; set; }
 }
