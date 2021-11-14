@@ -26,7 +26,7 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --no-build --no-restore --configuration Release --verbosity normal
     - name: Publish FeatureSwitches NuGet
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
