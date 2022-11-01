@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using FeatureSwitches.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -8,7 +9,7 @@ namespace FeatureSwitches.MSTest;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public sealed class FeatureTestMethodAttribute : TestMethodAttribute
 {
-    private static readonly Dictionary<string, IReadOnlyList<FeatureDefinition>> ExecutingTestFeatures = new();
+    private static readonly ConcurrentDictionary<string, IReadOnlyList<FeatureDefinition>> ExecutingTestFeatures = new();
 
     private readonly string[] onOff;
 
@@ -108,12 +109,12 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
                 }
 
                 var fullMethodName = testMethod.TestClassName + '/' + testMethod.TestMethodName;
-                ExecutingTestFeatures.Add(fullMethodName, featureDefinitions.OrderBy(x => x.Name).ToList());
+                ExecutingTestFeatures.TryAdd(fullMethodName, featureDefinitions.OrderBy(x => x.Name).ToList());
 
                 var result = testMethod.Invoke(null);
                 results.Add(result);
 
-                ExecutingTestFeatures.Remove(fullMethodName);
+                ExecutingTestFeatures.TryRemove(fullMethodName, out _);
             }
         }
 
