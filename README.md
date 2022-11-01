@@ -613,7 +613,7 @@ public void MyTestMethod()
     var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
     var featureService = serviceProvider.GetRequired<IFeatureService>();
 
-    featureDefinitionProvider.Load(FeatureTestMethodAttribute.Features);
+    featureDefinitionProvider.Load(FeatureTestMethodAttribute.GetFeatures(this.TestContex));
 
     if (await featureService.IsOn("FeatureA"))
     {
@@ -626,28 +626,20 @@ public void MyTestMethod()
 }
 ```
 
-The `FeatureTestMethodAttribute` defines a feature with `Name=FeatureA,OnValue=true,OffValue=false`. The `FeatureTestMethodAttribute.Features` is an enumerable that contains the feature definitions for the current test run with their `IsOn=true/false`.
-
-The feature definitions can also be loaded in test initialize, or the test class constructor.
+The `FeatureTestMethodAttribute` defines a feature with `Name=FeatureA,OnValue=true,OffValue=false`. The method `FeatureTestMethodAttribute.GetFeatures(this.TestContext)` returns the feature definitions for the current `TestContext` with their `IsOn=true/false`.
 
 ```C#
 [TestClass]
 public class MyTestClass
 {
-    public MyTestClass()
-    {
-        ...
-        var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
-        featureDefinitionProvider.Load(FeatureTestMethodAttribute.Features);
-    }
+    public TestContext TestContext { get; set; }
 
-    // or
     [TestInitialize]
-    public async Task Initialize()
+    public void Initialize()
     {
         ...
         var featureDefinitionProvider = serviceProvider.GetRequired<InMemoryFeatureDefinitionProvider>();
-        featureDefinitionProvider.Load(FeatureTestMethodAttribute.Features);
+        featureDefinitionProvider.Load(FeatureTestMethodAttribute.GetFeatures(this.TestContext));
     }
 
     [FeatureTestMethod(onOff: "FeatureA")]

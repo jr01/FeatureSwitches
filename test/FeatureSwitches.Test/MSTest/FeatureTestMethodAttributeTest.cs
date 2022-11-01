@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using FeatureSwitches.Definitions;
 using FeatureSwitches.MSTest;
 
@@ -7,12 +7,14 @@ namespace FeatureSwitches.Test.MSTest;
 [TestClass]
 public class FeatureTestMethodAttributeTest
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void Single_feature_on_off()
     {
         var attr = new FeatureTestMethodAttribute(onOff: "A");
 
-        var testMethod = new MockTestMethod();
+        var testMethod = new MockTestMethod(this.TestContext);
         attr.Execute(testMethod);
 
         Assert.AreEqual(2, testMethod.Executions.Count);
@@ -35,7 +37,7 @@ public class FeatureTestMethodAttributeTest
     {
         var attr = new FeatureTestMethodAttribute(onOff: "A,B");
 
-        var testMethod = new MockTestMethod();
+        var testMethod = new MockTestMethod(this.TestContext);
         attr.Execute(testMethod);
 
         Assert.AreEqual(4, testMethod.Executions.Count);
@@ -74,7 +76,7 @@ public class FeatureTestMethodAttributeTest
     {
         var attr = new FeatureTestMethodAttribute(onOff: "A", on: "B", off: "C");
 
-        var testMethod = new MockTestMethod();
+        var testMethod = new MockTestMethod(this.TestContext);
         attr.Execute(testMethod);
 
         Assert.AreEqual(2, testMethod.Executions.Count);
@@ -103,7 +105,7 @@ public class FeatureTestMethodAttributeTest
 
         var testData = new FeatureTestValueAttribute("A", onValue: "On", offValue: "Off");
 
-        var testMethod = new MockTestMethod(new List<Attribute> { testData });
+        var testMethod = new MockTestMethod(this.TestContext, new List<Attribute> { testData });
         attr.Execute(testMethod);
 
         Assert.AreEqual(2, testMethod.Executions.Count);
@@ -121,7 +123,7 @@ public class FeatureTestMethodAttributeTest
 
         var testData = new FeatureTestValueAttribute("A", onValues: new object[] { "On1", "On2" }, offValue: "Off");
 
-        var testMethod = new MockTestMethod(new List<Attribute> { testData });
+        var testMethod = new MockTestMethod(this.TestContext, new List<Attribute> { testData });
         attr.Execute(testMethod);
 
         Assert.AreEqual(3, testMethod.Executions.Count);
@@ -141,23 +143,25 @@ public class FeatureTestMethodAttributeTest
 
     public class MockTestMethod : ITestMethod
     {
+        private readonly TestContext testContext;
         private readonly IList<Attribute> testAttributes;
 
-        public MockTestMethod()
-            : this(new List<Attribute>())
+        public MockTestMethod(TestContext testContext)
+            : this(testContext, new List<Attribute>())
         {
         }
 
-        public MockTestMethod(IList<Attribute> testAttributes)
+        public MockTestMethod(TestContext testContext, IList<Attribute> testAttributes)
         {
+            this.testContext = testContext;
             this.testAttributes = testAttributes;
         }
 
         public IList<MockTestMethodExecution> Executions { get; } = new List<MockTestMethodExecution>();
 
-        public string TestMethodName => throw new InvalidOperationException();
+        public string TestMethodName => this.testContext.TestName;
 
-        public string TestClassName => throw new InvalidOperationException();
+        public string TestClassName => this.testContext.FullyQualifiedTestClassName;
 
         public Type ReturnType => throw new InvalidOperationException();
 
@@ -180,14 +184,14 @@ public class FeatureTestMethodAttributeTest
 
         public TestResult Invoke(object[] arguments)
         {
-            this.Executions.Add(new() { Features = FeatureTestMethodAttribute.Features.ToList() });
+            this.Executions.Add(new() { Features = FeatureTestMethodAttribute.GetFeatures(this.testContext) });
 
             return new TestResult();
         }
 
         public class MockTestMethodExecution
         {
-            public IList<FeatureDefinition> Features { get; set; } = default!;
+            public IReadOnlyList<FeatureDefinition> Features { get; set; } = default!;
         }
     }
 }

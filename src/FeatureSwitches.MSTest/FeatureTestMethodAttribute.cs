@@ -1,4 +1,4 @@
-﻿using FeatureSwitches.Definitions;
+using FeatureSwitches.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: CLSCompliant(true)]
@@ -8,7 +8,7 @@ namespace FeatureSwitches.MSTest;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public sealed class FeatureTestMethodAttribute : TestMethodAttribute
 {
-    private static readonly AsyncLocal<IEnumerable<FeatureDefinition>> AsyncLocalFeatures = new();
+    private static readonly Dictionary<string, IReadOnlyList<FeatureDefinition>> ExecutingTestFeatures = new();
 
     private readonly string[] onOff;
 
@@ -36,7 +36,20 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
         this.off = Convert(off);
     }
 
-    public static IEnumerable<FeatureDefinition> Features => AsyncLocalFeatures.Value ?? Array.Empty<FeatureDefinition>();
+    public static IReadOnlyList<FeatureDefinition> GetFeatures(TestContext context)
+    {
+        if (context is null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        if (ExecutingTestFeatures.TryGetValue(context.FullyQualifiedTestClassName + '/' + context.TestName, out var features))
+        {
+            return features;
+        }
+
+        return Array.Empty<FeatureDefinition>();
+    }
 
     public override TestResult[] Execute(ITestMethod testMethod)
     {
@@ -94,10 +107,13 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
                     });
                 }
 
-                AsyncLocalFeatures.Value = featureDefinitions.OrderBy(x => x.Name);
+                var fullMethodName = testMethod.TestClassName + '/' + testMethod.TestMethodName;
+                ExecutingTestFeatures.Add(fullMethodName, featureDefinitions.OrderBy(x => x.Name).ToList());
 
                 var result = testMethod.Invoke(null);
                 results.Add(result);
+
+                ExecutingTestFeatures.Remove(fullMethodName);
             }
         }
 
