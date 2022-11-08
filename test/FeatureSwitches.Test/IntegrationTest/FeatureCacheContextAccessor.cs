@@ -1,9 +1,9 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using FeatureSwitches.Caching;
 
 namespace FeatureSwitches.Test.IntegrationTest;
 
-public class FeatureCacheContextAccessor : IFeatureCacheContextAccessor
+public sealed class FeatureCacheContextAccessor : IFeatureCacheContextAccessor
 {
     private readonly CurrentCustomer currentCustomer;
 

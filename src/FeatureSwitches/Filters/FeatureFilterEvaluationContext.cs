@@ -1,8 +1,8 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 
 namespace FeatureSwitches.Filters;
 
-public class FeatureFilterEvaluationContext
+public sealed class FeatureFilterEvaluationContext
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
     private readonly object? settings;

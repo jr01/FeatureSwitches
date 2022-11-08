@@ -1,10 +1,10 @@
-﻿using System.Globalization;
+using System.Globalization;
 using FeatureSwitches.Filters;
 
 namespace FeatureSwitches.Test.Filters;
 
 [TestClass]
-public class SessionFeatureFilterTest
+public sealed class SessionFeatureFilterTest
 {
     [TestMethod]
     public async Task SessionFilter_enables_at_or_after_login_time()

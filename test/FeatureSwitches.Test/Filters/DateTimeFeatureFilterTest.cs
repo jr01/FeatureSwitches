@@ -1,10 +1,10 @@
-﻿using System.Globalization;
+using System.Globalization;
 using FeatureSwitches.Filters;
 
 namespace FeatureSwitches.Test.Filters;
 
 [TestClass]
-public class DateTimeFeatureFilterTest
+public sealed class DateTimeFeatureFilterTest
 {
     [TestMethod]
     public async Task DateTimeFilter_with_from()

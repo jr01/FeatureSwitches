@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Definitions;
+namespace FeatureSwitches.Definitions;
 
-public class FeatureFilterGroupDefinition
+public sealed class FeatureFilterGroupDefinition
 {
     /// <summary>
     /// Gets or sets the name of the group.

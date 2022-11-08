@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Test.IntegrationTest;
+namespace FeatureSwitches.Test.IntegrationTest;
 
-public class CustomerFeatureFilterSettings
+public sealed class CustomerFeatureFilterSettings
 {
     public HashSet<string> Customers { get; set; } = null!;
 }

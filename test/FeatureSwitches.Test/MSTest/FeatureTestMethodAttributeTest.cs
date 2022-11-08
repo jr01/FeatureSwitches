@@ -5,7 +5,7 @@ using FeatureSwitches.MSTest;
 namespace FeatureSwitches.Test.MSTest;
 
 [TestClass]
-public class FeatureTestMethodAttributeTest
+public sealed class FeatureTestMethodAttributeTest
 {
     public TestContext TestContext { get; set; } = null!;
 
@@ -141,7 +141,7 @@ public class FeatureTestMethodAttributeTest
         Assert.AreEqual("Off", testMethod.Executions[2].Features[0].OffValue);
     }
 
-    public class MockTestMethod : ITestMethod
+    public sealed class MockTestMethod : ITestMethod
     {
         private readonly TestContext testContext;
         private readonly IList<Attribute> testAttributes;
@@ -189,7 +189,7 @@ public class FeatureTestMethodAttributeTest
             return new TestResult();
         }
 
-        public class MockTestMethodExecution
+        public sealed class MockTestMethodExecution
         {
             public IReadOnlyList<FeatureDefinition> Features { get; set; } = default!;
         }

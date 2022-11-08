@@ -1,9 +1,9 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using FeatureSwitches.Filters;
 
 namespace FeatureSwitches.Test.IntegrationTest;
 
-public class CustomerFeatureFilter : IFeatureFilter
+public sealed class CustomerFeatureFilter : IFeatureFilter
 {
     private readonly CurrentCustomer currentCustomer;
 

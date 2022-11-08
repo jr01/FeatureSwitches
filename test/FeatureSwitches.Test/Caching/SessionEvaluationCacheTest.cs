@@ -1,11 +1,11 @@
-﻿//using System.Threading.Tasks;
+//using System.Threading.Tasks;
 //using FeatureSwitches.Caching;
 //using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 //namespace FeatureSwitches.Test.Session
 //{
 //    [TestClass]
-//    public class SessionEvaluationCacheTest
+//    public sealed class SessionEvaluationCacheTest
 //    {
 //        [TestMethod]
 //        public async Task Save_and_load()
@@ -54,7 +54,7 @@
 //            }
 //        }
 
-//        private class Person
+//        private sealed class Person
 //        {
 //            public string Name { get; set; } = null!;
 //        }

@@ -1,8 +1,8 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 
 namespace FeatureSwitches.Definitions;
 
-public class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvider
+public sealed class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvider
 {
     private readonly Dictionary<string, FeatureDefinition> featureSwitches = new();
 
@@ -15,11 +15,7 @@ public class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvider
     public Task<FeatureDefinition?> GetFeatureDefinition(string feature, CancellationToken cancellationToken = default)
     {
         this.featureSwitches.TryGetValue(feature, out var definition);
-#if NETSTANDARD2_0
-        return Task.FromResult<FeatureDefinition?>(definition);
-#else
         return Task.FromResult(definition);
-#endif
     }
 
     /// <summary>

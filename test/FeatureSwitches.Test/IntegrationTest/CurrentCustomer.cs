@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Test.IntegrationTest;
+namespace FeatureSwitches.Test.IntegrationTest;
 
-public class CurrentCustomer
+public sealed class CurrentCustomer
 {
     public string Name { get; set; } = null!;
 }

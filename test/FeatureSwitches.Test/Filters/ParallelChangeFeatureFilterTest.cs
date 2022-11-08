@@ -1,9 +1,9 @@
-﻿using FeatureSwitches.Filters;
+using FeatureSwitches.Filters;
 
 namespace FeatureSwitches.Test.Filters;
 
 [TestClass]
-public class ParallelChangeFeatureFilterTest
+public sealed class ParallelChangeFeatureFilterTest
 {
     [TestMethod]
     public async Task ParallelChangeFilter_state_matches_setting()

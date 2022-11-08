@@ -1,4 +1,4 @@
-﻿namespace FeatureSwitches.MSTest;
+namespace FeatureSwitches.MSTest;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public sealed class FeatureTestValueAttribute : Attribute
@@ -9,7 +9,7 @@ public sealed class FeatureTestValueAttribute : Attribute
     }
 
 #pragma warning disable CA1019 // Define accessors for attribute arguments
-    public FeatureTestValueAttribute(string feature, object offValue, object onValue)
+    public FeatureTestValueAttribute(string feature, object offValue, object? onValue)
 #pragma warning restore CA1019 // Define accessors for attribute arguments
             : this(feature, offValue: offValue, onValues: onValue == null ? Array.Empty<object>() : new object[] { onValue })
     {

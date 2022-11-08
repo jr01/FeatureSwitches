@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace FeatureSwitches.Test.IntegrationTest;
 
 [TestClass]
-public class FeatureServiceIntegrationTest
+public sealed class FeatureServiceIntegrationTest
 {
     private readonly ServiceProvider sp;
 
@@ -175,7 +175,7 @@ public class FeatureServiceIntegrationTest
     {
         // can't expect the user to write base64
         // anything below the node should be auto byte arrayed.
-        var json = @"
+        var json = /*lang=json,strict*/ @"
 [
   {
     ""Name"": ""FeatureA"",
@@ -236,8 +236,8 @@ public class FeatureServiceIntegrationTest
         featureDatabase.SetFeatureGroup("FeatureA", "GroupA", isOn: false, onValue: true);
         featureDatabase.SetFeatureGroup("FeatureA", "GroupB", isOn: true, onValue: true);
 
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\", \"C\"] }", "GroupA");
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"A\", \"C\"] }", "GroupA");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"B\"] }", "GroupB");
 
         using (var scope = this.sp.CreateScope())
         {
@@ -269,8 +269,8 @@ public class FeatureServiceIntegrationTest
         featureDatabase.SetFeatureGroup("FeatureA", "GroupA", isOn: false);
         featureDatabase.SetFeatureGroup("FeatureA", "GroupB", isOn: false);
 
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\", \"C\"] }", "GroupA");
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"A\", \"C\"] }", "GroupA");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"B\"] }", "GroupB");
 
         var featureService = this.sp.GetRequiredService<FeatureService>();
         SetCurrentCustomer("A");
@@ -290,8 +290,8 @@ public class FeatureServiceIntegrationTest
         featureDatabase.SetFeatureGroup("FeatureA", "GroupA", onValue: MultiSwitch.Halfway);
         featureDatabase.SetFeatureGroup("FeatureA", "GroupB", onValue: MultiSwitch.On);
 
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }", "GroupA");
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"A\"] }", "GroupA");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"B\"] }", "GroupB");
 
         var featureService = this.sp.GetRequiredService<FeatureService>();
         SetCurrentCustomer("A");
@@ -338,10 +338,10 @@ public class FeatureServiceIntegrationTest
         featureDatabase.SetFeature("FeatureA", offValue: offVariation, onValue: defaultOnVariation);
 
         featureDatabase.SetFeatureGroup("FeatureA", "GroupA", onValue: halfWayVariation);
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }", "GroupA");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"A\"] }", "GroupA");
 
         featureDatabase.SetFeatureGroup("FeatureA", "GroupB", onValue: defaultOnVariation);
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"B\"] }", "GroupB");
 
         var featureService = this.sp.GetRequiredService<FeatureService>();
         SetCurrentCustomer("A");
@@ -366,10 +366,10 @@ public class FeatureServiceIntegrationTest
         featureDatabase.SetFeature("FeatureA", offValue: offVariation, onValue: defaultOnVariation);
 
         featureDatabase.SetFeatureGroup("FeatureA", "GroupA", onValue: halfWayVariation);
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }", "GroupA");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"A\"] }", "GroupA");
 
         featureDatabase.SetFeatureGroup("FeatureA", "GroupB", onValue: defaultOnVariation);
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"B\"] }", "GroupB");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"B\"] }", "GroupB");
 
         var featureService = this.sp.GetRequiredService<FeatureService>();
         SetCurrentCustomer("A");
@@ -391,7 +391,7 @@ public class FeatureServiceIntegrationTest
     {
         var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
         featureDatabase.SetFeature("FeatureA", isOn: true);
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [] }");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [] }");
 
         using (var scope = this.sp.CreateScope())
         {
@@ -400,7 +400,7 @@ public class FeatureServiceIntegrationTest
             Assert.IsFalse(await featureService.IsOn("FeatureA"));
         }
 
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", "{ \"Customers\": [\"A\"] }");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", /*lang=json,strict*/ "{ \"Customers\": [\"A\"] }");
 
         using (var scope = this.sp.CreateScope())
         {
@@ -486,7 +486,7 @@ public class FeatureServiceIntegrationTest
         public string Name { get; set; }
     }
 
-    private class TestVariation
+    private sealed class TestVariation
     {
         [JsonIgnore]
         public Color Color { get; set; }

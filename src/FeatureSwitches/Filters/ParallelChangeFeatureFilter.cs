@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Filters;
+namespace FeatureSwitches.Filters;
 
-public class ParallelChangeFeatureFilter : ContextualFeatureFilter<ParallelChange>
+public sealed class ParallelChangeFeatureFilter : ContextualFeatureFilter<ParallelChange>
 {
     public override string Name => "ParallelChange";
 
