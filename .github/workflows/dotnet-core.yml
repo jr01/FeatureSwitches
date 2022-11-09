@@ -8,37 +8,19 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET 6
-      uses: actions/setup-dotnet@v1
+    - uses: actions/checkout@v3
+    - uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.100
-    - name: Setup .NET 7
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 7.0.100
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test --no-build --no-restore --configuration Release --verbosity normal
-    - name: Publish FeatureSwitches NuGet
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: src/FeatureSwitches/FeatureSwitches.csproj
-        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
-    - name: Publish FeatureSwitches.MSTest NuGet
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: src/FeatureSwitches.MSTest/FeatureSwitches.MSTest.csproj
-        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
-    - name: Publish FeatureSwitches.ServiceCollection NuGet
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: src/FeatureSwitches.ServiceCollection/FeatureSwitches.ServiceCollection.csproj
-        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+        dotnet-version: |
+          6.0.100
+          7.0.100
+    - run: dotnet restore
+    - run: dotnet build --configuration Release --no-restore
+    - run: dotnet test --no-build --configuration Release --verbosity normal
+    - run: dotnet pack --no-build --configuration Release --output .
+    - name: Publish nugets
+      if: github.event_name != 'pull_request'
+      run: |
+        dotnet nuget push *.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_API_KEY}} --skip-duplicate --no-symbols
