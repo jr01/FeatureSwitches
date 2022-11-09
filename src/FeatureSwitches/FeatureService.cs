@@ -129,7 +129,7 @@ public sealed class FeatureService : IFeatureService
                 Eval = evaluationContext
             });
 
-#if NET7_0
+#if NET7_0_OR_GREATER
             var result = SHA256.HashData(bytesToHash);
 #else
             using var hasher = SHA256.Create();
