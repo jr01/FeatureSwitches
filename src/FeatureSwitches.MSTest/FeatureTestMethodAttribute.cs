@@ -11,31 +11,33 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
 {
     private static readonly ConcurrentDictionary<string, IReadOnlyList<FeatureDefinition>> ExecutingTestFeatures = new();
 
-    private readonly string[] onOff;
-
-    private readonly string[] on;
-
-    private readonly string[] off;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="FeatureTestMethodAttribute"/> class.
     /// </summary>
     /// <param name="onOff">A comma separated string of features to vary between on/off.</param>
     /// <param name="on">A comma separated string of features that are always on.</param>
     /// <param name="off">A comma separated string of features that are always off.</param>
-#pragma warning disable CA1019 // Define accessors for attribute arguments
     public FeatureTestMethodAttribute(string? onOff, string? on = null, string? off = null)
-#pragma warning restore CA1019 // Define accessors for attribute arguments
     {
-        static string[] Convert(string? arg)
-        {
-            return arg?.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray() ?? Array.Empty<string>();
-        }
-
-        this.onOff = Convert(onOff);
-        this.on = Convert(on);
-        this.off = Convert(off);
+        this.OnOff = onOff;
+        this.On = on;
+        this.Off = off;
     }
+
+    /// <summary>
+    /// Gets a comma separated string of features to vary between on/off.
+    /// </summary>
+    public string? OnOff { get; }
+
+    /// <summary>
+    /// Gets a comma separated string of features that are always on.
+    /// </summary>
+    public string? On { get; }
+
+    /// <summary>
+    /// Gets a comma separated string of features that are always off.
+    /// </summary>
+    public string? Off { get; }
 
     public static IReadOnlyList<FeatureDefinition> GetFeatures(TestContext context)
     {
@@ -54,12 +56,21 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
 
     public override TestResult[] Execute(ITestMethod testMethod)
     {
+        static string[] Convert(string? arg)
+        {
+            return arg?.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray() ?? Array.Empty<string>();
+        }
+
+        var on = Convert(this.On);
+        var off = Convert(this.Off);
+        var onOff = Convert(this.OnOff);
+
         var results = new List<TestResult>();
         var featuresTestValues = testMethod.GetAttributes<FeatureTestValueAttribute>(false);
-        var allFeatures = this.on.Concat(this.off).Concat(this.onOff);
+        var allFeatures = on.Concat(off).Concat(onOff);
 
-        var onCombinations = Enumerable.Range(0, 1 << this.onOff.Length)
-            .Select(index => this.onOff.Where((v, i) => (index & (1 << i)) != 0).ToArray());
+        var onCombinations = Enumerable.Range(0, 1 << onOff.Length)
+            .Select(index => onOff.Where((v, i) => (index & (1 << i)) != 0).ToArray());
         foreach (var onCombination in onCombinations)
         {
             var outsideOnCombination = allFeatures.Except(onCombination);
@@ -102,7 +113,7 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
                     featureDefinitions.Add(new FeatureDefinition
                     {
                         Name = feature,
-                        IsOn = this.on.Contains(feature),
+                        IsOn = on.Contains(feature),
                         OffValue = offValue,
                         OnValue = onValue
                     });

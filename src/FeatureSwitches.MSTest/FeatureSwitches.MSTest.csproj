@@ -1,13 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
-  </PropertyGroup>
-  
-  <PropertyGroup>
     <Description>FeatureSwitches MSTest</Description>
     <PackageId>FeatureSwitches.MSTest</PackageId>
-    <Version>2.1.1</Version>
+    <Version>3.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

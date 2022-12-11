@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
 namespace FeatureSwitches.Caching;
 
@@ -52,7 +52,7 @@ public sealed class InMemoryFeatureCache : IFeatureCache
         return Task.CompletedTask;
     }
 
-    private class CacheValue
+    private sealed class CacheValue
     {
         public byte[] Value { get; set; } = default!;
 

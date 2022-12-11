@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Filters;
+namespace FeatureSwitches.Filters;
 
-public class SessionFeatureFilter : IFeatureFilter
+public sealed class SessionFeatureFilter : IFeatureFilter
 {
     private readonly SessionFeatureContext sessionContext;
 

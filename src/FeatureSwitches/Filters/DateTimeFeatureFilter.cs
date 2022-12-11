@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Filters;
+namespace FeatureSwitches.Filters;
 
-public class DateTimeFeatureFilter : IFeatureFilter
+public sealed class DateTimeFeatureFilter : IFeatureFilter
 {
     private readonly Func<DateTimeOffset> dateTimeResolver;
 

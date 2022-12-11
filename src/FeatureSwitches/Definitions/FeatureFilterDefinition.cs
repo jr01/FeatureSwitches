@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Definitions;
+namespace FeatureSwitches.Definitions;
 
-public class FeatureFilterDefinition
+public sealed class FeatureFilterDefinition
 {
     /// <summary>
     /// Gets or sets the filter name.

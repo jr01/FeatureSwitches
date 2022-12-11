@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Filters;
+namespace FeatureSwitches.Filters;
 
-public class DateTimeFeatureFilterSettings
+public sealed class DateTimeFeatureFilterSettings
 {
     public DateTimeOffset? From { get; set; }
 

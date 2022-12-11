@@ -1,10 +1,10 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using FeatureSwitches.Caching;
 
 namespace FeatureSwitches.Test.Caching;
 
 [TestClass]
-public class InMemoryEvaluationCacheTest
+public sealed class InMemoryEvaluationCacheTest
 {
     [TestMethod]
     public async Task FeatureEvaluationCache_caches_using_evaluationcontext()

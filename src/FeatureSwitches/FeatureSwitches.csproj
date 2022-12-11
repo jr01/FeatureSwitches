@@ -1,17 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
-  </PropertyGroup>
-  
-  <PropertyGroup>
     <Description>Simple feature management for .NET</Description>
     <PackageId>FeatureSwitches</PackageId>
-    <Version>2.0.0</Version>
+    <Version>3.0.0</Version>
   </PropertyGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Text.Json" Version="5.0.0" />
-  </ItemGroup>
 
 </Project>

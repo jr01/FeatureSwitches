@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Filters;
+namespace FeatureSwitches.Filters;
 
-public class SessionFeatureContext
+public sealed class SessionFeatureContext
 {
     public DateTimeOffset LoginTime { get; set; }
 }

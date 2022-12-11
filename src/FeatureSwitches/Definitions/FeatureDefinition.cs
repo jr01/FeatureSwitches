@@ -1,6 +1,6 @@
-﻿namespace FeatureSwitches.Definitions;
+namespace FeatureSwitches.Definitions;
 
-public class FeatureDefinition
+public sealed class FeatureDefinition
 {
     /// <summary>
     /// Gets or sets the feature name.
@@ -23,16 +23,12 @@ public class FeatureDefinition
     public object? OnValue { get; set; }
 
     /// <summary>
-    /// Gets or sets a list of filters.
+    /// Gets a list of filters.
     /// </summary>
-#pragma warning disable CA2227 // Collection properties should be read only
-    public IList<FeatureFilterDefinition> Filters { get; set; } = new List<FeatureFilterDefinition>();
-#pragma warning restore CA2227 // Collection properties should be read only
+    public IList<FeatureFilterDefinition> Filters { get; init; } = new List<FeatureFilterDefinition>();
 
     /// <summary>
-    /// Gets or sets a list of filter groups.
+    /// Gets a list of filter groups.
     /// </summary>
-#pragma warning disable CA2227 // Collection properties should be read only
-    public IList<FeatureFilterGroupDefinition> FilterGroups { get; set; } = new List<FeatureFilterGroupDefinition>();
-#pragma warning restore CA2227 // Collection properties should be read only
+    public IList<FeatureFilterGroupDefinition> FilterGroups { get; init; } = new List<FeatureFilterGroupDefinition>();
 }

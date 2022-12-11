@@ -1,4 +1,4 @@
-﻿namespace FeatureSwitches.MSTest;
+namespace FeatureSwitches.MSTest;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public sealed class FeatureTestFilterAttribute : Attribute
@@ -24,7 +24,8 @@ public sealed class FeatureTestFilterAttribute : Attribute
     {
     }
 
-    public FeatureTestFilterAttribute(string feature, string featureFilterName, object[] configs) // Not CLS-compliant.
+    [CLSCompliant(false)]
+    public FeatureTestFilterAttribute(string feature, string featureFilterName, object[] configs)
     {
         this.Feature = feature;
         this.FeatureFilterName = featureFilterName;

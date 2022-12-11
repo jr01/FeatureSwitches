@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text.Json;
 using FeatureSwitches.Caching;
@@ -12,7 +12,7 @@ namespace FeatureSwitches;
 /// <summary>
 /// A featureservice implementation. Typically has as scoped lifetime.
 /// </summary>
-public class FeatureService : IFeatureService
+public sealed class FeatureService : IFeatureService
 {
     private readonly IFeatureDefinitionProvider featureDefinitionProvider;
     private readonly IEnumerable<IFeatureCache> featureEvaluationCaches;
@@ -129,8 +129,12 @@ public class FeatureService : IFeatureService
                 Eval = evaluationContext
             });
 
+#if NET7_0_OR_GREATER
+            var result = SHA256.HashData(bytesToHash);
+#else
             using var hasher = SHA256.Create();
             var result = hasher.ComputeHash(bytesToHash);
+#endif
             return BitConverter.ToString(result).Trim(new char[] { '-' });
         }
     }
@@ -208,7 +212,7 @@ public class FeatureService : IFeatureService
         });
     }
 
-    private class EvaluationResult
+    private sealed class EvaluationResult
     {
         public object? SwitchValue { get; set; }
     }
