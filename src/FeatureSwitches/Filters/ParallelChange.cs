@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace FeatureSwitches.Filters;
 
@@ -21,5 +21,5 @@ public enum ParallelChange
     /// <summary>
     /// Contracted.
     /// </summary>
-    Contracted
+    Contracted,
 }

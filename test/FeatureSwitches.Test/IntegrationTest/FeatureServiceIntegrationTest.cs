@@ -39,7 +39,7 @@ public sealed class FeatureServiceIntegrationTest
     {
         var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
         featureDatabase.SetFeature("FeatureA", isOn: true, offValue: false, onValue: true);
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } });
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = ["A", "C"] });
 
         var featureService = this.sp.GetRequiredService<FeatureService>();
         SetCurrentCustomer("A");
@@ -55,7 +55,7 @@ public sealed class FeatureServiceIntegrationTest
     {
         var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
         featureDatabase.SetFeature("FeatureA", offValue: false, isOn: true);
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } });
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = ["A", "C"] });
 
         var featureService = this.sp.GetRequiredService<FeatureService>();
         SetCurrentCustomer("A");
@@ -70,7 +70,7 @@ public sealed class FeatureServiceIntegrationTest
     {
         var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
         featureDatabase.SetFeature("FeatureA", offValue: false, isOn: true);
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } });
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = ["A", "C"] });
 
         SetCurrentCustomer("A");
         for (var i = 0; i < 10000; i++)
@@ -146,8 +146,8 @@ public sealed class FeatureServiceIntegrationTest
         featureDatabase.SetFeatureGroup("FeatureA", "GroupA", isOn: false, onValue: true);
         featureDatabase.SetFeatureGroup("FeatureA", "GroupB", isOn: true, onValue: true);
 
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "A", "C" } }, "GroupA");
-        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = new HashSet<string> { "B" } }, "GroupB");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = ["A", "C"] }, "GroupA");
+        featureDatabase.SetFeatureFilter("FeatureA", "Customer", new CustomerFeatureFilterSettings { Customers = ["B"] }, "GroupB");
 
         var featureService = this.sp.GetRequiredService<FeatureService>();
         SetCurrentCustomer("A");
@@ -478,7 +478,7 @@ public sealed class FeatureServiceIntegrationTest
 
     private static void SetCurrentCustomer(string name)
     {
-        Thread.CurrentPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.Name, name) }));
+        Thread.CurrentPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new(ClaimTypes.Name, name) }));
     }
 
     private struct StructVariation

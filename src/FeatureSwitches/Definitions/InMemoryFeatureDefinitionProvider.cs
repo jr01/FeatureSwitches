@@ -4,7 +4,8 @@ namespace FeatureSwitches.Definitions;
 
 public sealed class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvider
 {
-    private readonly Dictionary<string, FeatureDefinition> featureSwitches = new();
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+    private readonly Dictionary<string, FeatureDefinition> featureSwitches = [];
 
     public Task<string[]> GetFeatures(CancellationToken cancellationToken = default)
     {
@@ -87,7 +88,7 @@ public sealed class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvid
             Name = feature,
             OffValue = offValue,
             OnValue = onValue,
-            IsOn = isOn
+            IsOn = isOn,
         };
     }
 
@@ -137,7 +138,7 @@ public sealed class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvid
         {
             featureFilterGroup = new()
             {
-                Name = group
+                Name = group,
             };
             definition.FilterGroups.Add(featureFilterGroup);
         }
@@ -159,12 +160,8 @@ public sealed class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvid
             throw new InvalidOperationException($"Feature {feature} must be defined first.");
         }
 
-        var featureFilterGroup = definition.FilterGroups.FirstOrDefault(x => x.Name == group);
-        if (featureFilterGroup is null)
-        {
+        var featureFilterGroup = definition.FilterGroups.FirstOrDefault(x => x.Name == group) ??
             throw new InvalidOperationException($"Feature group {group} must be defined first.");
-        }
-
         featureFilterGroup.IsOn = isOn;
     }
 
@@ -174,6 +171,8 @@ public sealed class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvid
     /// <param name="features">The features.</param>
     public void Load(IEnumerable<FeatureDefinition> features)
     {
+        ArgumentNullException.ThrowIfNull(features);
+
         this.featureSwitches.Clear();
         foreach (var feature in features)
         {
@@ -191,12 +190,8 @@ public sealed class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvid
     /// <param name="json">The json.</param>
     public void LoadFromJson(string json)
     {
-        var features = JsonSerializer.Deserialize<IEnumerable<FeatureDefinition>>(json);
-        if (features is null)
-        {
-            throw new InvalidOperationException("Invalid json.");
-        }
-
+        var features = JsonSerializer.Deserialize<IEnumerable<FeatureDefinition>>(json)
+            ?? throw new InvalidOperationException("Invalid json.");
         this.Load(features);
     }
 
@@ -215,6 +210,6 @@ public sealed class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvid
     /// <returns>A JSON formatted string.</returns>
     public string SaveToJson()
     {
-        return JsonSerializer.Serialize(this.Save(), new JsonSerializerOptions { WriteIndented = true });
+        return JsonSerializer.Serialize(this.Save(), JsonSerializerOptions);
     }
 }

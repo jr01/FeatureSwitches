@@ -131,7 +131,7 @@ dotnet_diagnostic.IDE0045.severity = silent # 'if' statement can be simplified.
 dotnet_diagnostic.IDE0046.severity = silent # 'if' statement can be simplified.
 dotnet_diagnostic.IDE0058.severity = silent # Expression value is never used. -- _ = await Something() everywhere ...
 dotnet_diagnostic.IDE0072.severity = silent # Populate switch expression with all cases.
-
+dotnet_diagnostic.IDE0290.severity = silent # Use primary constructor
 
 #
 # CSharp formatting settings:
@@ -175,5 +175,6 @@ csharp_space_between_square_brackets = false
 csharp_preserve_single_line_statements = true
 csharp_preserve_single_line_blocks = true
 csharp_using_directive_placement = outside_namespace
-dotnet_diagnostic.IDE0160.severity=silent
-dotnet_diagnostic.IDE0161.severity=warning
+
+# IDE0160: Convert to file-scoped namespace
+csharp_style_namespace_declarations = file_scoped:warning

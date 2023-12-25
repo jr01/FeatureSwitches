@@ -121,7 +121,7 @@ public sealed class FeatureTestMethodAttributeTest
     {
         var attr = new FeatureTestMethodAttribute(onOff: "A");
 
-        var testData = new FeatureTestValueAttribute("A", onValues: new object[] { "On1", "On2" }, offValue: "Off");
+        var testData = new FeatureTestValueAttribute("A", onValues: ["On1", "On2"], offValue: "Off");
 
         var testMethod = new MockTestMethod(this.TestContext, new List<Attribute> { testData });
         attr.Execute(testMethod);
@@ -159,9 +159,9 @@ public sealed class FeatureTestMethodAttributeTest
 
         public IList<MockTestMethodExecution> Executions { get; } = new List<MockTestMethodExecution>();
 
-        public string TestMethodName => this.testContext.TestName;
+        public string TestMethodName => this.testContext.TestName!;
 
-        public string TestClassName => this.testContext.FullyQualifiedTestClassName;
+        public string TestClassName => this.testContext.FullyQualifiedTestClassName!;
 
         public Type ReturnType => throw new InvalidOperationException();
 
@@ -182,7 +182,7 @@ public sealed class FeatureTestMethodAttributeTest
             return this.testAttributes.OfType<TAttributeType>().ToArray();
         }
 
-        public TestResult Invoke(object[] arguments)
+        public TestResult Invoke(object[]? arguments)
         {
             this.Executions.Add(new() { Features = FeatureTestMethodAttribute.GetFeatures(this.testContext) });
 

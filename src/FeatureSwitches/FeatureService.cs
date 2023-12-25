@@ -110,7 +110,7 @@ public sealed class FeatureService : IFeatureService
         {
             IFeatureFilter featureFilter => featureFilter.IsOn(context, cancellationToken),
             IContextualFeatureFilter contextualFeatureFilter => contextualFeatureFilter.IsOn(context, evaluationContext, cancellationToken),
-            _ => Task.FromResult(false)
+            _ => Task.FromResult(false),
         };
     }
 
@@ -126,7 +126,7 @@ public sealed class FeatureService : IFeatureService
             var bytesToHash = JsonSerializer.SerializeToUtf8Bytes(new
             {
                 Exec = exec,
-                Eval = evaluationContext
+                Eval = evaluationContext,
             });
 
 #if NET7_0_OR_GREATER
@@ -135,7 +135,7 @@ public sealed class FeatureService : IFeatureService
             using var hasher = SHA256.Create();
             var result = hasher.ComputeHash(bytesToHash);
 #endif
-            return BitConverter.ToString(result).Trim(new char[] { '-' });
+            return BitConverter.ToString(result).Trim(['-']);
         }
     }
 
@@ -161,7 +161,7 @@ public sealed class FeatureService : IFeatureService
 
         EvaluationResult evalutionResult = new()
         {
-            SwitchValue = featureDefinition.OffValue
+            SwitchValue = featureDefinition.OffValue,
         };
 
         if (featureDefinition.IsOn && await EvaluateGroupFilters(null).ConfigureAwait(false))

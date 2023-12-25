@@ -16,6 +16,8 @@ public sealed class CustomerFeatureFilter : IFeatureFilter
 
     public Task<bool> IsOn(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         var settings = context.GetSettings<CustomerFeatureFilterSettings>();
 
         var name = this.currentCustomer.Name ?? GetCurrentCustomer();

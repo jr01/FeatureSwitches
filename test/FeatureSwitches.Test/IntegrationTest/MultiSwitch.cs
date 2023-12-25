@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace FeatureSwitches.Test.IntegrationTest;
 
@@ -18,5 +18,5 @@ public enum MultiSwitch
     /// <summary>
     /// Switch is off.
     /// </summary>
-    Off
+    Off,
 }

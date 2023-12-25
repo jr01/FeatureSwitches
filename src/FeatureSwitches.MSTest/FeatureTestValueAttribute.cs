@@ -11,7 +11,7 @@ public sealed class FeatureTestValueAttribute : Attribute
 #pragma warning disable CA1019 // Define accessors for attribute arguments
     public FeatureTestValueAttribute(string feature, object offValue, object? onValue)
 #pragma warning restore CA1019 // Define accessors for attribute arguments
-            : this(feature, offValue: offValue, onValues: onValue == null ? Array.Empty<object>() : new object[] { onValue })
+            : this(feature, offValue: offValue, onValues: onValue == null ? [] : [onValue])
     {
     }
 
