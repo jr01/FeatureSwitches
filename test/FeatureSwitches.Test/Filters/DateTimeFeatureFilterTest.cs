@@ -14,7 +14,7 @@ public sealed class DateTimeFeatureFilterTest
 
         var context = GetContext(new DateTimeFeatureFilterSettings
         {
-            From = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture)
+            From = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture),
         });
 
         Assert.IsFalse(await filter.IsOn(context).ConfigureAwait(false));
@@ -31,7 +31,7 @@ public sealed class DateTimeFeatureFilterTest
         var filter = new DateTimeFeatureFilter(() => { return now; });
         var context = GetContext(new DateTimeFeatureFilterSettings
         {
-            To = DateTimeOffset.Parse("2020-11-10", CultureInfo.InvariantCulture)
+            To = DateTimeOffset.Parse("2020-11-10", CultureInfo.InvariantCulture),
         });
 
         Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
@@ -49,7 +49,7 @@ public sealed class DateTimeFeatureFilterTest
         var context = GetContext(new DateTimeFeatureFilterSettings
         {
             From = DateTimeOffset.Parse("2020-11-04", CultureInfo.InvariantCulture),
-            To = DateTimeOffset.Parse("2020-11-10", CultureInfo.InvariantCulture)
+            To = DateTimeOffset.Parse("2020-11-10", CultureInfo.InvariantCulture),
         });
 
         Assert.IsFalse(await filter.IsOn(context).ConfigureAwait(false));
@@ -69,7 +69,7 @@ public sealed class DateTimeFeatureFilterTest
         var context = GetContext(new DateTimeFeatureFilterSettings
         {
             From = null,
-            To = null
+            To = null,
         });
 
         Assert.IsTrue(await filter.IsOn(context).ConfigureAwait(false));
@@ -81,7 +81,7 @@ public sealed class DateTimeFeatureFilterTest
         var settings = new
         {
             From = DateTimeOffset.Parse("2020-11-21T00:00:00.000Z", CultureInfo.InvariantCulture),
-            To = (DateTimeOffset?)null
+            To = (DateTimeOffset?)null,
         };
 
         var context = new FeatureFilterEvaluationContext("A", settings);
@@ -99,7 +99,7 @@ public sealed class DateTimeFeatureFilterTest
         var settings = new
         {
             from = DateTimeOffset.Parse("2020-11-21T00:00:00.000Z", CultureInfo.InvariantCulture),
-            to = (DateTimeOffset?)null
+            to = (DateTimeOffset?)null,
         };
 
         var context = new FeatureFilterEvaluationContext("A", settings);

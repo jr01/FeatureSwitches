@@ -35,7 +35,7 @@ public sealed class InMemoryFeatureCache : IFeatureCache
     {
         this.cache[$"{feature}:{context}"] = new CacheValue
         {
-            Value = value
+            Value = value,
         };
 
         return Task.CompletedTask;

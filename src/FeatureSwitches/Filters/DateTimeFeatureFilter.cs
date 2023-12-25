@@ -18,14 +18,12 @@ public sealed class DateTimeFeatureFilter : IFeatureFilter
 
     public Task<bool> IsOn(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         var now = this.dateTimeResolver();
 
-        var settings = context.GetSettings<DateTimeFeatureFilterSettings>();
-        if (settings is null)
-        {
-            throw new InvalidOperationException("Invalid settings.");
-        }
-
+        var settings = context.GetSettings<DateTimeFeatureFilterSettings>()
+            ?? throw new InvalidOperationException("Invalid settings.");
         var isOn = true;
         if (settings.From.HasValue && now < settings.From)
         {

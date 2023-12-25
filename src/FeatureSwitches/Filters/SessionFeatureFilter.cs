@@ -13,12 +13,10 @@ public sealed class SessionFeatureFilter : IFeatureFilter
 
     public Task<bool> IsOn(FeatureFilterEvaluationContext context, CancellationToken cancellationToken = default)
     {
-        var settings = context.GetSettings<SessionFeatureFilterSettings>();
-        if (settings is null)
-        {
-            throw new InvalidOperationException("Invalid settings.");
-        }
+        ArgumentNullException.ThrowIfNull(context);
 
+        var settings = context.GetSettings<SessionFeatureFilterSettings>()
+            ?? throw new InvalidOperationException("Invalid settings.");
         var isOn = DateTimeOffset.Compare(this.sessionContext.LoginTime, settings.From) >= 0;
         return Task.FromResult(isOn);
     }

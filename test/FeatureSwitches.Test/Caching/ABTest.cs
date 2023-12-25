@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace FeatureSwitches.Test.Caching;
 
@@ -13,5 +13,5 @@ public enum ABTest
     /// <summary>
     /// Choose B.
     /// </summary>
-    B
+    B,
 }

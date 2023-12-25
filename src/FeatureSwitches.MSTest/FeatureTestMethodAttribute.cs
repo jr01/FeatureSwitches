@@ -9,6 +9,7 @@ namespace FeatureSwitches.MSTest;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public sealed class FeatureTestMethodAttribute : TestMethodAttribute
 {
+    private static readonly char[] ArgumentSeparator = [','];
     private static readonly ConcurrentDictionary<string, IReadOnlyList<FeatureDefinition>> ExecutingTestFeatures = new();
 
     /// <summary>
@@ -39,12 +40,10 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
     /// </summary>
     public string? Off { get; }
 
+    [CLSCompliant(false)]
     public static IReadOnlyList<FeatureDefinition> GetFeatures(TestContext context)
     {
-        if (context is null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(context);
 
         if (ExecutingTestFeatures.TryGetValue(context.FullyQualifiedTestClassName + '/' + context.TestName, out var features))
         {
@@ -56,9 +55,11 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
 
     public override TestResult[] Execute(ITestMethod testMethod)
     {
+        ArgumentNullException.ThrowIfNull(testMethod);
+
         static string[] Convert(string? arg)
         {
-            return arg?.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray() ?? Array.Empty<string>();
+            return arg?.Split(ArgumentSeparator, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray() ?? [];
         }
 
         var on = Convert(this.On);
@@ -77,26 +78,26 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
 
             IEnumerable<IEnumerable<FeatureDefinition>> onCombinationValues = new List<List<FeatureDefinition>>
                 {
-                    new List<FeatureDefinition>()
+                    new(),
                 };
 
             foreach (var feature in onCombination)
             {
                 var featureTestData = featuresTestValues.SingleOrDefault(x => x.Feature == feature);
-                var onValues = featureTestData?.OnValues ?? new object[] { true };
+                var onValues = featureTestData?.OnValues ?? [true];
                 var offValue = featureTestData?.OffValue ?? false;
 
                 onCombinationValues = onCombinationValues.SelectMany(o =>
                     onValues.Select(onValue =>
                         o.Concat(new List<FeatureDefinition>
                         {
-                                new FeatureDefinition
+                                new()
                                 {
                                     Name = feature,
                                     IsOn = true,
                                     OffValue = offValue,
-                                    OnValue = onValue
-                                }
+                                    OnValue = onValue,
+                                },
                         })));
             }
 
@@ -115,7 +116,7 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
                         Name = feature,
                         IsOn = on.Contains(feature),
                         OffValue = offValue,
-                        OnValue = onValue
+                        OnValue = onValue,
                     });
                 }
 
@@ -129,6 +130,6 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
             }
         }
 
-        return results.ToArray();
+        return [.. results];
     }
 }
