@@ -14,8 +14,7 @@ jobs:
     - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: |
-          6.0.100
-          7.0.100
+          8.0.100
     - run: dotnet restore
     - run: dotnet build --configuration Release --no-restore
     - run: dotnet test --no-build --configuration Release --verbosity normal
