@@ -10,11 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-dotnet@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: |
-          8.0.100
+        global-json-file: "./global.json"
     - run: dotnet restore
     - run: dotnet build --configuration Release --no-restore
     - run: dotnet test --no-build --configuration Release --verbosity normal

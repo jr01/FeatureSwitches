@@ -15,7 +15,7 @@ public sealed class FeatureTestMethodAttributeTest
         var attr = new FeatureTestMethodAttribute(onOff: "A");
 
         var testMethod = new MockTestMethod(this.TestContext);
-        attr.Execute(testMethod);
+        var testResults = attr.Execute(testMethod);
 
         Assert.AreEqual(2, testMethod.Executions.Count);
 
@@ -30,6 +30,10 @@ public sealed class FeatureTestMethodAttributeTest
         Assert.AreEqual(true, testMethod.Executions[1].Features[0].IsOn);
         Assert.AreEqual(true, testMethod.Executions[1].Features[0].OnValue);
         Assert.AreEqual(false, testMethod.Executions[1].Features[0].OffValue);
+
+        Assert.AreEqual(2, testResults.Length);
+        Assert.AreEqual($"{nameof(this.Single_feature_on_off)} (A: off)", testResults[0].DisplayName);
+        Assert.AreEqual($"{nameof(this.Single_feature_on_off)} (A: on)", testResults[1].DisplayName);
     }
 
     [TestMethod]
@@ -38,7 +42,7 @@ public sealed class FeatureTestMethodAttributeTest
         var attr = new FeatureTestMethodAttribute(onOff: "A,B");
 
         var testMethod = new MockTestMethod(this.TestContext);
-        attr.Execute(testMethod);
+        var testResults = attr.Execute(testMethod);
 
         Assert.AreEqual(4, testMethod.Executions.Count);
 
@@ -69,6 +73,12 @@ public sealed class FeatureTestMethodAttributeTest
         Assert.AreEqual(true, testMethod.Executions[3].Features[0].IsOn);
         Assert.AreEqual("B", testMethod.Executions[3].Features[1].Name);
         Assert.AreEqual(true, testMethod.Executions[3].Features[1].IsOn);
+
+        Assert.AreEqual(4, testResults.Length);
+        Assert.AreEqual($"{nameof(this.Two_features_on_off)} (A: off, B: off)", testResults[0].DisplayName);
+        Assert.AreEqual($"{nameof(this.Two_features_on_off)} (A: on, B: off)", testResults[1].DisplayName);
+        Assert.AreEqual($"{nameof(this.Two_features_on_off)} (A: off, B: on)", testResults[2].DisplayName);
+        Assert.AreEqual($"{nameof(this.Two_features_on_off)} (A: on, B: on)", testResults[3].DisplayName);
     }
 
     [TestMethod]
@@ -77,7 +87,7 @@ public sealed class FeatureTestMethodAttributeTest
         var attr = new FeatureTestMethodAttribute(onOff: "A", on: "B", off: "C");
 
         var testMethod = new MockTestMethod(this.TestContext);
-        attr.Execute(testMethod);
+        var testResults = attr.Execute(testMethod);
 
         Assert.AreEqual(2, testMethod.Executions.Count);
 
@@ -96,6 +106,10 @@ public sealed class FeatureTestMethodAttributeTest
         Assert.AreEqual(true, testMethod.Executions[1].Features[1].IsOn);
         Assert.AreEqual("C", testMethod.Executions[1].Features[2].Name);
         Assert.AreEqual(false, testMethod.Executions[1].Features[2].IsOn);
+
+        Assert.AreEqual(2, testResults.Length);
+        Assert.AreEqual($"{nameof(this.Single_feature_on_off_and_feature_on_and_feature_off)} (A: off, B: on, C: off)", testResults[0].DisplayName);
+        Assert.AreEqual($"{nameof(this.Single_feature_on_off_and_feature_on_and_feature_off)} (A: on, B: on, C: off)", testResults[1].DisplayName);
     }
 
     [TestMethod]
@@ -103,17 +117,21 @@ public sealed class FeatureTestMethodAttributeTest
     {
         var attr = new FeatureTestMethodAttribute(onOff: "A");
 
-        var testData = new FeatureTestValueAttribute("A", onValue: "On", offValue: "Off");
+        var testData = new FeatureTestValueAttribute("A", onValue: "High", offValue: "Low");
 
-        var testMethod = new MockTestMethod(this.TestContext, new List<Attribute> { testData });
-        attr.Execute(testMethod);
+        var testMethod = new MockTestMethod(this.TestContext, [testData]);
+        var testResults = attr.Execute(testMethod);
 
         Assert.AreEqual(2, testMethod.Executions.Count);
 
         Assert.AreEqual("A", testMethod.Executions[0].Features[0].Name);
         Assert.AreEqual(false, testMethod.Executions[0].Features[0].IsOn);
-        Assert.AreEqual("On", testMethod.Executions[0].Features[0].OnValue);
-        Assert.AreEqual("Off", testMethod.Executions[0].Features[0].OffValue);
+        Assert.AreEqual("High", testMethod.Executions[0].Features[0].OnValue);
+        Assert.AreEqual("Low", testMethod.Executions[0].Features[0].OffValue);
+
+        Assert.AreEqual(2, testResults.Length);
+        Assert.AreEqual($"{nameof(this.Single_feature_on_off_typed)} (A: Low)", testResults[0].DisplayName);
+        Assert.AreEqual($"{nameof(this.Single_feature_on_off_typed)} (A: High)", testResults[1].DisplayName);
     }
 
     [TestMethod]
@@ -123,8 +141,8 @@ public sealed class FeatureTestMethodAttributeTest
 
         var testData = new FeatureTestValueAttribute("A", onValues: ["On1", "On2"], offValue: "Off");
 
-        var testMethod = new MockTestMethod(this.TestContext, new List<Attribute> { testData });
-        attr.Execute(testMethod);
+        var testMethod = new MockTestMethod(this.TestContext, [testData]);
+        var testResults = attr.Execute(testMethod);
 
         Assert.AreEqual(3, testMethod.Executions.Count);
 
@@ -139,6 +157,11 @@ public sealed class FeatureTestMethodAttributeTest
         Assert.AreEqual(true, testMethod.Executions[2].Features[0].IsOn);
         Assert.AreEqual("On2", testMethod.Executions[2].Features[0].OnValue);
         Assert.AreEqual("Off", testMethod.Executions[2].Features[0].OffValue);
+
+        Assert.AreEqual(3, testResults.Length);
+        Assert.AreEqual($"{nameof(this.Single_feature_on_off_typed_multiple_onvalues)} (A: Off)", testResults[0].DisplayName);
+        Assert.AreEqual($"{nameof(this.Single_feature_on_off_typed_multiple_onvalues)} (A: On1)", testResults[1].DisplayName);
+        Assert.AreEqual($"{nameof(this.Single_feature_on_off_typed_multiple_onvalues)} (A: On2)", testResults[2].DisplayName);
     }
 
     public sealed class MockTestMethod : ITestMethod
@@ -147,7 +170,7 @@ public sealed class FeatureTestMethodAttributeTest
         private readonly IList<Attribute> testAttributes;
 
         public MockTestMethod(TestContext testContext)
-            : this(testContext, new List<Attribute>())
+            : this(testContext, [])
         {
         }
 
@@ -157,7 +180,7 @@ public sealed class FeatureTestMethodAttributeTest
             this.testAttributes = testAttributes;
         }
 
-        public IList<MockTestMethodExecution> Executions { get; } = new List<MockTestMethodExecution>();
+        public IList<MockTestMethodExecution> Executions { get; } = [];
 
         public string TestMethodName => this.testContext.TestName!;
 
