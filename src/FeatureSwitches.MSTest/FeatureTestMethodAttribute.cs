@@ -18,7 +18,9 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
     /// <param name="onOff">A comma separated string of features to vary between on/off.</param>
     /// <param name="on">A comma separated string of features that are always on.</param>
     /// <param name="off">A comma separated string of features that are always off.</param>
-    public FeatureTestMethodAttribute(string? onOff, string? on = null, string? off = null)
+    /// <param name="displayName">The display name.</param>
+    public FeatureTestMethodAttribute(string? onOff, string? on = null, string? off = null, string? displayName = null)
+        : base(displayName)
     {
         this.OnOff = onOff;
         this.On = on;
@@ -50,7 +52,7 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
             return features;
         }
 
-        return Array.Empty<FeatureDefinition>();
+        return [];
     }
 
     public override TestResult[] Execute(ITestMethod testMethod)
@@ -89,8 +91,8 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
 
                 onCombinationValues = onCombinationValues.SelectMany(o =>
                     onValues.Select(onValue =>
-                        o.Concat(new List<FeatureDefinition>
-                        {
+                        o.Concat(
+                        [
                                 new()
                                 {
                                     Name = feature,
@@ -98,7 +100,7 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
                                     OffValue = offValue,
                                     OnValue = onValue,
                                 },
-                        })));
+                        ])));
             }
 
             foreach (var onCombinationValue in onCombinationValues)
@@ -121,9 +123,23 @@ public sealed class FeatureTestMethodAttribute : TestMethodAttribute
                 }
 
                 var fullMethodName = testMethod.TestClassName + '/' + testMethod.TestMethodName;
-                ExecutingTestFeatures.TryAdd(fullMethodName, featureDefinitions.OrderBy(x => x.Name).ToList());
+                var sortedFeatures = featureDefinitions.OrderBy(x => x.Name).ToList();
+                ExecutingTestFeatures.TryAdd(fullMethodName, sortedFeatures);
 
                 var result = testMethod.Invoke(null);
+
+                static string GetOnOffValue(object? value)
+                {
+                    return value switch
+                    {
+                        bool b => b ? "on" : "off",
+                        _ => value?.ToString() ?? "null",
+                    };
+                }
+
+                var featureSet = string.Join(", ", sortedFeatures.Select(x => $"{x.Name}: {(x.IsOn ? $"{GetOnOffValue(x.OnValue)}" : $"{GetOnOffValue(x.OffValue)}")}"));
+                result.DisplayName = $"{this.DisplayName ?? testMethod.TestMethodName} ({featureSet})";
+
                 results.Add(result);
 
                 ExecutingTestFeatures.TryRemove(fullMethodName, out _);

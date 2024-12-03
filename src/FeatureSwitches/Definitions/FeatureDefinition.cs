@@ -25,10 +25,10 @@ public sealed class FeatureDefinition
     /// <summary>
     /// Gets a list of filters.
     /// </summary>
-    public IList<FeatureFilterDefinition> Filters { get; init; } = new List<FeatureFilterDefinition>();
+    public IList<FeatureFilterDefinition> Filters { get; init; } = [];
 
     /// <summary>
     /// Gets a list of filter groups.
     /// </summary>
-    public IList<FeatureFilterGroupDefinition> FilterGroups { get; init; } = new List<FeatureFilterGroupDefinition>();
+    public IList<FeatureFilterGroupDefinition> FilterGroups { get; init; } = [];
 }

@@ -346,13 +346,16 @@ public sealed class FeatureServiceIntegrationTest
         var featureService = this.sp.GetRequiredService<FeatureService>();
         SetCurrentCustomer("A");
         var variation = await featureService.GetValue<TestVariation>("FeatureA");
-        Assert.AreEqual(Color.Gray, variation?.Color);
+        Assert.IsNotNull(variation);
+        Assert.AreEqual(Color.Gray, variation.Color);
         SetCurrentCustomer("B");
         variation = await featureService.GetValue<TestVariation>("FeatureA");
-        Assert.AreEqual(Color.White, variation?.Color);
+        Assert.IsNotNull(variation);
+        Assert.AreEqual(Color.White, variation.Color);
         SetCurrentCustomer("C");
         variation = await featureService.GetValue<TestVariation>("FeatureA");
-        Assert.AreEqual(Color.Black, variation?.Color);
+        Assert.IsNotNull(variation);
+        Assert.AreEqual(Color.Black, variation.Color);
     }
 
     [TestMethod]
@@ -472,13 +475,13 @@ public sealed class FeatureServiceIntegrationTest
         var featureService = this.sp.GetRequiredService<FeatureService>();
         var features = await featureService.GetFeatures();
         Assert.AreEqual(2, features.Length);
-        Assert.AreEqual(features[0], "FeatureA");
-        Assert.AreEqual(features[1], "FeatureB");
+        Assert.AreEqual("FeatureA", features[0]);
+        Assert.AreEqual("FeatureB", features[1]);
     }
 
     private static void SetCurrentCustomer(string name)
     {
-        Thread.CurrentPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new(ClaimTypes.Name, name) }));
+        Thread.CurrentPrincipal = new ClaimsPrincipal(new ClaimsIdentity([new(ClaimTypes.Name, name)]));
     }
 
     private struct StructVariation

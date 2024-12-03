@@ -201,7 +201,7 @@ public sealed class InMemoryFeatureDefinitionProvider : IFeatureDefinitionProvid
     /// <returns>A list of feature definitions.</returns>
     public IList<FeatureDefinition> Save()
     {
-        return this.featureSwitches.Values.ToList();
+        return [.. this.featureSwitches.Values];
     }
 
     /// <summary>

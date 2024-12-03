@@ -2,7 +2,7 @@
   <Import Project="..\Directory.Build.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -12,6 +12,8 @@
           test code.
         [CA1303: Do not pass literals as localized parameters] 
           reasoning: test projects won't use translations
+        [CA1515: make type internal]
+          reasoning: tests need public classes in order to be found
         [CA1707: Remove the underscores from member name]
           reasoning: ok for test names.
         [CA1819: Properties should not return arrays]
@@ -21,7 +23,7 @@
         [CA2227: Change property to be read-only by removing property setter]
           test code.
     -->
-    <NoWarn>$(NoWarn);CA1034;CA1303;CA1707;CA1819;CA2007;CA2227;SA0001</NoWarn>
+    <NoWarn>$(NoWarn);CA1034;CA1303;CA1515;CA1707;CA1819;CA2007;CA2227;SA0001</NoWarn>
   </PropertyGroup>
 
 </Project>
