@@ -1,4 +1,4 @@
-﻿namespace FeatureSwitches;
+namespace FeatureSwitches;
 
 public interface IFeatureService
 {
@@ -57,7 +57,7 @@ public interface IFeatureService
     /// <param name="feature">The featureswitch name.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The current switch value, or null if the feature doesn't exist.</returns>
-    public Task<byte[]?> GetBytes(string feature, CancellationToken cancellationToken = default);
+    Task<byte[]?> GetBytes(string feature, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the current value of the featureswitch within the specified evaluation context as a byte array.
@@ -68,5 +68,5 @@ public interface IFeatureService
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <typeparam name="TEvaluationContext">The evaluation context type.</typeparam>
     /// <returns>The current switch value, or null if the feature doesn't exist.</returns>
-    public Task<byte[]?> GetBytes<TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
+    Task<byte[]?> GetBytes<TEvaluationContext>(string feature, TEvaluationContext evaluationContext, CancellationToken cancellationToken = default);
 }

@@ -104,7 +104,7 @@ public sealed class FeatureServiceIntegrationTest
         var featureDatabase = this.sp.GetRequiredService<InMemoryFeatureDefinitionProvider>();
         featureDatabase.SetFeature("Egg");
         var featureService = this.sp.GetRequiredService<FeatureService>();
-        await Assert.ThrowsExceptionAsync<JsonException>(() => featureService.GetValue<TestVariation>("Egg"));
+        await Assert.ThrowsAsync<JsonException>(() => featureService.GetValue<TestVariation>("Egg"));
         Assert.IsTrue(await featureService.IsOn("Egg"));
     }
 
@@ -124,7 +124,7 @@ public sealed class FeatureServiceIntegrationTest
         featureDatabase.SetFeature("Switch", isOn: true, offValue: "Off", onValue: "On");
 
         var featureService = this.sp.GetRequiredService<FeatureService>();
-        await Assert.ThrowsExceptionAsync<JsonException>(() => featureService.IsOn("Switch"));
+        await Assert.ThrowsAsync<JsonException>(() => featureService.IsOn("Switch"));
     }
 
     [TestMethod]
@@ -474,7 +474,7 @@ public sealed class FeatureServiceIntegrationTest
 
         var featureService = this.sp.GetRequiredService<FeatureService>();
         var features = await featureService.GetFeatures();
-        Assert.AreEqual(2, features.Length);
+        Assert.HasCount(2, features);
         Assert.AreEqual("FeatureA", features[0]);
         Assert.AreEqual("FeatureB", features[1]);
     }
