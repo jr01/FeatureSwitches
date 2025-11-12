@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>Simple feature management for .NET</Description>
     <PackageId>FeatureSwitches</PackageId>
-    <Version>9.0.0</Version>
+    <Version>10.0.0</Version>
   </PropertyGroup>
 
 </Project>
