@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>FeatureSwitches MSTest</Description>
     <PackageId>FeatureSwitches.MSTest</PackageId>
-    <Version>10.0.0</Version>
+    <Version>10.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +11,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.1.0" />
   </ItemGroup> 
 </Project>
