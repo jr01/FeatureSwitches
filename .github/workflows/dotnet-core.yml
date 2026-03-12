@@ -10,8 +10,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-dotnet@v4
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+    - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
       with:
         global-json-file: "./global.json"
     - run: dotnet restore
@@ -20,5 +20,7 @@ jobs:
     - run: dotnet pack --no-build --configuration Release --output .
     - name: Publish nugets
       if: github.event_name != 'pull_request'
+      env:
+        NUGET_API_KEY: ${{secrets.NUGET_API_KEY}}
       run: |
-        dotnet nuget push *.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_API_KEY}} --skip-duplicate --no-symbols
+        dotnet nuget push *.nupkg --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate --no-symbols
